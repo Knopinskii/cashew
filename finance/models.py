@@ -23,7 +23,7 @@ class ExpenseCategory(models.Model):
 
     def __str__(self):
         return self.name
-    
+
 class Income(models.Model):
     user = models.ForeignKey('users.User', on_delete=models.CASCADE)
     category = models.ForeignKey('IncomeCategory', on_delete=models.CASCADE)
