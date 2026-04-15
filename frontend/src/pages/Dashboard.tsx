@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/useAuth";
 import { getIncomes, getTransactions } from "../services/api";
 import { Button, Card } from "../components/ui";
 import type { Income, Transaction } from "../types";
