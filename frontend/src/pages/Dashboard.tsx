@@ -1,38 +1,18 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import api from "../api";
-
-interface Income {
-  id: number;
-  category: number;
-  amount: string;
-  note: string;
-  date: string;
-}
-
-interface Transaction {
-  id: number;
-  category: number;
-  amount: string;
-  note: string;
-  date: string;
-}
+import { useAuth } from "../context/AuthContext";
+import { getIncomes, getTransactions } from "../services/api";
+import { Button, Card } from "../components/ui";
+import type { Income, Transaction } from "../types";
 
 export default function Dashboard() {
   const [incomes, setIncomes] = useState<Income[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const navigate = useNavigate();
+  const { logout } = useAuth();
 
   useEffect(() => {
-    api.get("/api/finance/incomes/").then((r) => setIncomes(r.data));
-    api.get("/api/finance/transactions/").then((r) => setTransactions(r.data));
+    getIncomes().then(setIncomes);
+    getTransactions().then(setTransactions);
   }, []);
-
-  const handleLogout = async () => {
-    await api.post("/auth/token/logout/");
-    localStorage.removeItem("authToken");
-    navigate("/login");
-  };
 
   const totalIncome = incomes.reduce((sum, i) => sum + parseFloat(i.amount), 0);
   const totalExpenses = transactions.reduce((sum, t) => sum + parseFloat(t.amount), 0);
@@ -43,35 +23,30 @@ export default function Dashboard() {
       {/* Header */}
       <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
         <h1 className="text-xl font-semibold text-gray-900">Cashew</h1>
-        <button
-          onClick={handleLogout}
-          className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
-        >
-          Logout
-        </button>
+        <Button variant="secondary" onClick={logout}>Logout</Button>
       </div>
 
       <div className="max-w-4xl mx-auto px-6 py-8 space-y-6">
         {/* Summary cards */}
         <div className="grid grid-cols-3 gap-4">
-          <div className="bg-white rounded-xl border border-gray-200 p-5">
+          <Card className="p-5">
             <p className="text-sm text-gray-500 mb-1">Balance</p>
             <p className={`text-2xl font-semibold ${balance >= 0 ? "text-gray-900" : "text-red-500"}`}>
               ${balance.toFixed(2)}
             </p>
-          </div>
-          <div className="bg-white rounded-xl border border-gray-200 p-5">
+          </Card>
+          <Card className="p-5">
             <p className="text-sm text-gray-500 mb-1">Income</p>
             <p className="text-2xl font-semibold text-green-600">${totalIncome.toFixed(2)}</p>
-          </div>
-          <div className="bg-white rounded-xl border border-gray-200 p-5">
+          </Card>
+          <Card className="p-5">
             <p className="text-sm text-gray-500 mb-1">Expenses</p>
             <p className="text-2xl font-semibold text-red-500">${totalExpenses.toFixed(2)}</p>
-          </div>
+          </Card>
         </div>
 
         {/* Incomes */}
-        <div className="bg-white rounded-xl border border-gray-200">
+        <Card>
           <div className="px-5 py-4 border-b border-gray-100">
             <h2 className="text-base font-semibold text-gray-900">Incomes</h2>
           </div>
@@ -97,10 +72,10 @@ export default function Dashboard() {
               </tbody>
             </table>
           )}
-        </div>
+        </Card>
 
         {/* Transactions */}
-        <div className="bg-white rounded-xl border border-gray-200">
+        <Card>
           <div className="px-5 py-4 border-b border-gray-100">
             <h2 className="text-base font-semibold text-gray-900">Transactions</h2>
           </div>
@@ -126,7 +101,7 @@ export default function Dashboard() {
               </tbody>
             </table>
           )}
-        </div>
+        </Card>
       </div>
     </div>
   );
