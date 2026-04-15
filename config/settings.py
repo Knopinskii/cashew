@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     # third party
     "corsheaders",
     "rest_framework",
+    "rest_framework.authtoken",
     # local
     "users",
     "finance",
@@ -52,7 +53,7 @@ SIMPLE_JWT = {
 }
 
 DJOSER = {
-    'TOKEN_MODEL': None,
+    'LOGIN_FIELD': 'email',
 }
 
 
