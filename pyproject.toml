@@ -11,4 +11,6 @@ dependencies = [
     "djoser>=2.3",
     "social-auth-app-django>=5.7",
     "cryptography>=46.0",
+    "django-cors-headers>=4.9.0",
+    "python-dotenv>=1.2.2",
 ]
