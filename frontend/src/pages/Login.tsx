@@ -1,31 +1,15 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/useAuth";
 import { Button, Input } from "../components/ui";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const { login } = useAuth();
-  const navigate = useNavigate();
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    try {
-      await login({ email, password });
-      navigate("/dashboard");
-    } catch {
-      setError("Invalid email or password");
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 w-full max-w-sm">
         <h1 className="text-2xl font-semibold text-gray-900 mb-6">Sign in</h1>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form className="space-y-4">
           <Input
             label="Email"
             type="email"
@@ -40,7 +24,6 @@ export default function Login() {
             onChange={(e) => setPassword(e.target.value)}
             placeholder="••••••••"
           />
-          {error && <p className="text-sm text-red-500">{error}</p>}
           <Button type="submit" className="w-full justify-center">
             Sign in
           </Button>
