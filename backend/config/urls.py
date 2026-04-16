@@ -7,5 +7,5 @@ urlpatterns = [
     path('api/users/', include('users.urls')),
     path('api-auth/', include('rest_framework.urls')),
     re_path(r'^auth/', include('djoser.urls')),
-    re_path(r'^auth/', include('djoser.urls.authtoken')),
+    re_path(r'^auth/', include('djoser.urls.jwt')),
 ]

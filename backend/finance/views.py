@@ -2,11 +2,9 @@ from rest_framework import viewsets
 from finance.models import IncomeCategory, ExpenseCategory, Income, Transaction
 from finance.serializers import IncomeCategorySerializer, ExpenseCategorySerializer, IncomeSerializer, TransactionSerializer
 
-# Create your views here.
 
 class BaseViewSet(viewsets.ModelViewSet):
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+    pass
 
 
 class IncomeCategoryViewSet(BaseViewSet):
@@ -14,25 +12,35 @@ class IncomeCategoryViewSet(BaseViewSet):
     queryset = IncomeCategory.objects.none()
 
     def get_queryset(self):
-        return IncomeCategory.objects.filter(user=self.request.user)
-
+        user = self.request.user
+        return user.income_categories.all() 
+    
 class ExpenseCategoryViewSet(BaseViewSet):
     serializer_class = ExpenseCategorySerializer
     queryset = ExpenseCategory.objects.none()
 
     def get_queryset(self):
-        return ExpenseCategory.objects.filter(user=self.request.user)
+        user = self.request.user
+        return user.expense_categories.all()
 
 class IncomeViewSet(BaseViewSet):
     serializer_class = IncomeSerializer
     queryset = Income.objects.none()
 
     def get_queryset(self):
-        return Income.objects.filter(user=self.request.user)
+        user = self.request.user
+        return user.income_set.all()
+    
+    def perform_create(self, serializer):
+      serializer.save(user=self.request.user)
 
 class TransactionViewSet(BaseViewSet):
     serializer_class = TransactionSerializer
     queryset = Transaction.objects.none()
 
     def get_queryset(self):
-        return Transaction.objects.filter(user=self.request.user)
+        user = self.request.user
+        return user.transactions.all()
+    
+    def perform_create(self, serializer):
+      serializer.save(user=self.request.user)
