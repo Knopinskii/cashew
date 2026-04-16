@@ -19,20 +19,9 @@ class IncomeSerializer(serializers.ModelSerializer):
         model = Income
         fields = ['id', 'category', 'amount', 'note', 'date', 'user']
 
-    def validate_category(self, value):                                                                                                                                           
-          if value.user != self.context['request'].user:                                                                                                                          
-              raise serializers.ValidationError("Invalid category.")                                                                                                                
-          return value
-    
 class TransactionSerializer(serializers.ModelSerializer):
     user = serializers.ReadOnlyField(source='user.username')
 
     class Meta:
         model = Transaction
         fields = ['id','category', 'amount', 'note', 'date', 'user']
-    
-    def validate_category(self, value):                                                                                                                                           
-          if value.user != self.context['request'].user:                                                                                                                          
-              raise serializers.ValidationError("Invalid category.")                                                                                                                
-          return value
-

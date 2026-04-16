@@ -39,7 +39,7 @@ class Income(models.Model):
         return f"{self.amount} - {self.category}"
     
 class Transaction(models.Model):
-    user = models.ForeignKey('users.User', on_delete=models.CASCADE)
+    user = models.ForeignKey('users.User', on_delete=models.CASCADE, related_name='transactions')
     category = models.ForeignKey('ExpenseCategory', on_delete=models.CASCADE)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     note = models.CharField(max_length=30,blank=True, default="")
