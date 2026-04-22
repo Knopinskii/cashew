@@ -1,15 +1,20 @@
-import { useAuth } from "../context/useAuth";
+import { useNavigate } from "react-router-dom";
 import { Button, Card } from "../components/ui";
 
 export default function Dashboard() {
-  const { logout } = useAuth();
+  const navigate = useNavigate();
+
+  function handleLogaut() {
+    localStorage.removeItem("token");
+    navigate("/login");
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
         <h1 className="text-xl font-semibold text-gray-900">Cashew</h1>
-        <Button variant="secondary" onClick={logout}>
+        <Button variant="secondary" onClick={handleLogaut}>
           Logout
         </Button>
       </div>
@@ -42,7 +47,9 @@ export default function Dashboard() {
         {/* Transactions */}
         <Card>
           <div className="px-5 py-4 border-b border-gray-100">
-            <h2 className="text-base font-semibold text-gray-900">Transactions</h2>
+            <h2 className="text-base font-semibold text-gray-900">
+              Transactions
+            </h2>
           </div>
           <p className="text-sm text-gray-400 px-5 py-6">No transactions yet</p>
         </Card>
