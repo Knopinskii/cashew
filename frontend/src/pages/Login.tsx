@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button, Input } from "../components/ui";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { login } from "../services/api/auth.api";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -11,14 +11,10 @@ export default function Login() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-
-    const response = await axios.post(
-      "http://127.0.0.1:8000/auth/jwt/create/",
-      {
-        email,
-        password,
-      }
-    );
+    const response = await login({
+      email,
+      password,
+    });
     localStorage.setItem("token", response.data.access);
     navigate("/dashboard");
   }

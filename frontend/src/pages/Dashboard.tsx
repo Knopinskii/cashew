@@ -1,13 +1,26 @@
 import { useNavigate } from "react-router-dom";
 import { Button, Card } from "../components/ui";
+import { useEffect, useState } from "react";
+import { getIncomeCategories } from "../services/api/finance.api";
 
 export default function Dashboard() {
+  const [open, setOpen] = useState(false);
+  const [categories, setCategories] = useState([]);
+
   const navigate = useNavigate();
 
   function handleLogaut() {
     localStorage.removeItem("token");
     navigate("/login");
   }
+
+  useEffect(() => {
+    async function load() {
+      const response = await getIncomeCategories();
+      setCategories(response.data);
+    }
+    load();
+  }, [open]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -39,7 +52,25 @@ export default function Dashboard() {
         {/* Incomes */}
         <Card>
           <div className="px-5 py-4 border-b border-gray-100">
-            <h2 className="text-base font-semibold text-gray-900">Incomes</h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-base font-semibold text-gray-900">Incomes</h2>
+              <button onClick={() => setOpen(true)}>+</button>
+            </div>
+            {open && (
+              <div className="px-5 py-4 border-b border-gray-100">
+                <div className="flex items-center justify-between">
+                  <select>
+                    {categories.map((category) => (
+                      <option key={category.id}>{category.name}</option>
+                    ))}
+                  </select>
+                  <input type="number" />
+                  <input type="text" />
+                  <input type="date" />
+                  <button>Save</button>
+                </div>
+              </div>
+            )}
           </div>
           <p className="text-sm text-gray-400 px-5 py-6">No incomes yet</p>
         </Card>
