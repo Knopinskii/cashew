@@ -31,10 +31,11 @@ class IncomeSerializer(serializers.ModelSerializer):
 
 class TransactionSerializer(serializers.ModelSerializer):
     user = serializers.ReadOnlyField(source='user.username')
+    category_detail = ExpenseCategorySerializer(source='category', read_only=True)
 
     class Meta:
         model = Transaction
-        fields = ['id','category', 'amount', 'note', 'date']
+        fields = ['id','category', 'amount', 'note', 'date', 'user', 'category_detail']
 
     def validate_category(self, value):
         if value.user != self.context['request'].user:
