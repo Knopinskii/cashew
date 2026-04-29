@@ -18,6 +18,7 @@ export interface ExpenseCategory {
 export interface Income {
   id: number;
   category: number;
+  category_detail: IncomeCategory;
   amount: string;
   note: string;
   date: string;
@@ -31,6 +32,7 @@ export interface Transaction {
   note: string;
   date: string;
   user: string;
+  category_detail: ExpenseCategory;
 }
 
 export interface LoginRequest {
