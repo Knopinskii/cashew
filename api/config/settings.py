@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     # local
     "users",
     "finance",
+    'core',
     # auth
     'djoser',
     'rest_framework_simplejwt',

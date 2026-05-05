@@ -6,6 +6,7 @@ urlpatterns = [
     path('api/finance/', include('finance.urls')),
     path('api/users/', include('users.urls')),
     path('api-auth/', include('rest_framework.urls')),
+    path('api/core/', include('core.urls')),
     re_path(r'^auth/', include('djoser.urls')),
     re_path(r'^auth/', include('djoser.urls.jwt')),
 ]
