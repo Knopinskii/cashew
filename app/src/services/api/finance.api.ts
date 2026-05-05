@@ -1,14 +1,15 @@
-import apiClient from "./apiClient";
+import type { CreateExpenseRequest, CreateIncomeRequest, ExpenseCategory, Income, IncomeCategory, Transaction } from "../../types";
+import { apiRequest } from "./apiClient";
 
 export async function getIncomeCategories() {
-  return apiClient({
+  return apiRequest<IncomeCategory[]>({
     url: "/api/finance/income-categories/",
     method: "GET",
   });
 }
 
-export async function createIncome(data) {
-  return apiClient({
+export async function createIncome(data: CreateIncomeRequest) {
+  return apiRequest<Income>({
     url: "/api/finance/incomes/",
     method: "POST",
     data,
@@ -16,40 +17,42 @@ export async function createIncome(data) {
 }
 
 export async function loadIncome() {
-  return apiClient({
+  return apiRequest<Income[]>({
     url: "/api/finance/incomes/",
     method: "GET",
   });
 }
+
 export async function loadExpense() {
-  return apiClient({
+  return apiRequest<Transaction[]>({
     url: "/api/finance/transactions/",
     method: "GET",
   });
 }
 
-export async function deleteIncome(id) {
-  return apiClient({
+export async function deleteIncome(id: string) {
+  return apiRequest<void>({
     url: `/api/finance/incomes/${id}/`,
     method: "DELETE",
   });
 }
 
-export async function deleteExpense(id) {
-  return apiClient({
+export async function deleteExpense(id: string) {
+  return apiRequest<void>({
     url: `/api/finance/transactions/${id}/`,
     method: "DELETE",
   });
 }
 
 export async function getExpenseCategories() {
-  return apiClient({
+  return apiRequest<ExpenseCategory[]>({
     url: "/api/finance/expense-categories/",
+    method: "GET",
   });
 }
 
-export async function createExpense(data) {
-  return apiClient({
+export async function createExpense(data: CreateExpenseRequest) {
+  return apiRequest<Transaction>({
     url: "/api/finance/transactions/",
     method: "POST",
     data,

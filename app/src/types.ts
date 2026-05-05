@@ -43,3 +43,17 @@ export interface LoginRequest {
 export interface LoginResponse {
   auth_token: string;
 }
+
+export interface CreateIncomeRequest {
+  category: number;
+  amount: string;
+  note: string;
+  date: string;
+}
+
+export interface CreateExpenseRequest {
+  category: number;
+  amount: string;
+  note: string;
+  date: string;
+}
