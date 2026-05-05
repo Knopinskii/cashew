@@ -1,4 +1,5 @@
 import axios from "axios";
+import type { AxiosRequestConfig } from "axios";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -16,4 +17,7 @@ apiClient.interceptors.request.use(function (config) {
   return config;
 });
 
-export default apiClient;
+export async function apiRequest<T>(config: AxiosRequestConfig): Promise<T> {
+  const response = await apiClient(config);
+  return response.data;
+}
