@@ -11,12 +11,16 @@ export default function Login() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const response = await login({
-      email,
-      password,
-    });
-    localStorage.setItem("token", response.data.access);
-    navigate("/dashboard");
+    try {
+      const response = await login({
+        email,
+        password,
+      });
+      localStorage.setItem("token", response.access);
+      navigate("/dashboard");
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   return (

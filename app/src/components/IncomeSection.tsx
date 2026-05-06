@@ -23,18 +23,18 @@ export default function IncomeSection({
 
   useEffect(() => {
     async function fetch() {
-      const response = await loadIncome();
-      setIncomes(response.data);
-      onDataChange(response.data);
+      const data = await loadIncome();
+      setIncomes(data);
+      onDataChange(data);
     }
     fetch();
   }, [open, onDataChange]);
 
   useEffect(() => {
     async function fetch() {
-      const response = await getIncomeCategories();
-      setCategories(response.data);
-      setCategory(response.data[0].id);
+      const data = await getIncomeCategories();
+      setCategories(data);
+      if (data.length > 0) setCategory(String(data[0].id));
     }
     fetch();
   }, [open]);
@@ -47,11 +47,11 @@ export default function IncomeSection({
     setOpen(false);
   }
 
-  async function handleDelete(id) {
+  async function handleDelete(id: string) {
     await deleteIncome(id);
-    const response = await loadIncome();
-    setIncomes(response.data);
-    onDataChange(response.data);
+    const data = await loadIncome();
+    setIncomes(data);
+    onDataChange(data);
   }
 
   return (
