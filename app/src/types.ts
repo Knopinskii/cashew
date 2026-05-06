@@ -41,7 +41,7 @@ export interface LoginRequest {
 }
 
 export interface LoginResponse {
-  auth_token: string;
+  access: string;
 }
 
 export interface CreateIncomeRequest {

@@ -23,18 +23,18 @@ export default function ExpenseSection({
 
   useEffect(() => {
     async function fetch() {
-      const response = await loadExpense();
-      setExpenses(response.data);
-      onDataChange(response.data);
+      const data = await loadExpense();
+      setExpenses(data);
+      onDataChange(data);
     }
     fetch();
   }, [open, onDataChange]);
 
   useEffect(() => {
     async function fetch() {
-      const response = await getExpenseCategories();
-      setCategories(response.data);
-      setCategory(response.data[0].id);
+      const data = await getExpenseCategories();
+      setCategories(data);
+      if (data.length > 0) setCategory(String(data[0].id));
     }
     fetch();
   }, [open]);
@@ -47,11 +47,11 @@ export default function ExpenseSection({
     setOpen(false);
   }
 
-  async function handleDelete(id) {
+  async function handleDelete(id: string) {
     await deleteExpense(id);
-    const response = await loadExpense();
-    setExpenses(response.data);
-    onDataChange(response.data);
+    const data = await loadExpense();
+    setExpenses(data);
+    onDataChange(data);
   }
 
   return (
