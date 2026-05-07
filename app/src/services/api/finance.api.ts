@@ -1,4 +1,13 @@
-import type { CreateExpenseRequest, CreateIncomeRequest, ExpenseCategory, Income, IncomeCategory, Transaction } from "../../types";
+import {
+  type Wallet,
+  type CreateExpenseRequest,
+  type CreateIncomeRequest,
+  type CreateWalletRequest,
+  type ExpenseCategory,
+  type Income,
+  type IncomeCategory,
+  type Transaction,
+} from "../../types";
 import { apiRequest } from "./apiClient";
 
 export async function getIncomeCategories() {
@@ -56,5 +65,27 @@ export async function createExpense(data: CreateExpenseRequest) {
     url: "/api/finance/transactions/",
     method: "POST",
     data,
+  });
+}
+
+export async function createWallet(data: CreateWalletRequest) {
+  return apiRequest<Wallet>({
+    url: "/api/finance/wallets/",
+    method: "POST",
+    data,
+  });
+}
+
+export async function getWallet() {
+  return apiRequest<Wallet[]>({
+    url: "/api/finance/wallets/",
+    method: "GET",
+  });
+}
+
+export async function deleteWallet(id: string) {
+  return apiRequest<void>({
+    url: `/api/finance/wallets/${id}/`,
+    method: "DELETE",
   });
 }
