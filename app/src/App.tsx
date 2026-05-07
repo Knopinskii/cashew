@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Register from "./pages/Register";
+import Settings from "./pages/Settings";
 
 function ProtectedRoute({ element }: { element: React.ReactElement }) {
   return localStorage.getItem("token") ? (
@@ -20,6 +21,7 @@ function AppRoutes() {
         element={<ProtectedRoute element={<Dashboard />} />}
       />
       <Route path="/register" element={<Register />} />
+      <Route path="/settings" element={<ProtectedRoute element={<Settings />} />} />
       <Route path="*" element={<Navigate to="/login" />} />
     </Routes>
   );
