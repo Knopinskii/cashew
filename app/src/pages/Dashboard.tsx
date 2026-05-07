@@ -1,35 +1,32 @@
-import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { Button } from "../components/ui";
+import Navbar from "../components/Navbar";
 import SummaryCards from "../components/SummaryCards";
-import IncomeSection from "../components/IncomeSection";
-import ExpenseSection from "../components/ExpenseSection";
+import TransactionList from "../components/TransactionList";
+import AddTransactionModal from "../components/AddTransactionModal";
 import type { Income, Transaction } from "../types";
 
 export default function Dashboard() {
-  const [incomes, setIncomes] = useState<Income[]>([]);
-  const [expenses, setExpenses] = useState<Transaction[]>([]);
-  const navigate = useNavigate();
-
-  function handleLogout() {
-    localStorage.removeItem("token");
-    navigate("/login");
-  }
+  const [incomes] = useState<Income[]>([]);
+  const [expenses] = useState<Transaction[]>([]);
+  const [open, setOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-gray-900">Cashew</h1>
-        <Button variant="secondary" onClick={handleLogout}>
-          Logout
-        </Button>
+      <Navbar />
+
+      <div className="max-w-2xl mx-auto px-6 py-8 space-y-6">
+        <SummaryCards incomes={incomes} expenses={expenses} />
+        <TransactionList />
       </div>
 
-      <div className="max-w-4xl mx-auto px-6 py-8 space-y-6">
-        <SummaryCards incomes={incomes} expenses={expenses} />
-        <IncomeSection onDataChange={setIncomes} />
-        <ExpenseSection onDataChange={setExpenses} />
-      </div>
+      <button
+        onClick={() => setOpen(true)}
+        className="fixed bottom-8 right-8 w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg flex items-center justify-center text-2xl transition-colors"
+      >
+        +
+      </button>
+
+      {open && <AddTransactionModal onClose={() => setOpen(false)} />}
     </div>
   );
 }
