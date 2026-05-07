@@ -31,6 +31,8 @@ class Income(BaseModel):
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     note = models.CharField(max_length=30,blank=True, default="") 
     date = models.DateField()
+    wallet = models.ForeignKey('Wallet', on_delete=models.CASCADE )
+    
 
     class Meta:
         verbose_name = "Income"
@@ -45,6 +47,7 @@ class Transaction(BaseModel):
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     note = models.CharField(max_length=30,blank=True, default="")
     date = models.DateField()
+    wallet = models.ForeignKey('Wallet', on_delete=models.CASCADE )
 
     class Meta:
         verbose_name = "Transaction"
@@ -52,3 +55,23 @@ class Transaction(BaseModel):
 
     def __str__(self):
         return f"{self.amount} - {self.category}"
+    
+
+class Wallet(BaseModel): 
+    
+    CURRENCY_CHOICES = [
+    ('USD', 'Dollar'),
+    ('EUR', 'Euro'),
+    ('RUB', 'Ruble'),
+]
+
+
+    user = models.ForeignKey("users.User", on_delete=models.CASCADE, related_name='wallets')
+    name = models.CharField(max_length=30)
+    currency = models.CharField(max_length=3, choices=CURRENCY_CHOICES, default='EUR')
+
+
+    def __str__(self):
+        return self.name
+    
+

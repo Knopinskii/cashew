@@ -57,3 +57,20 @@ export interface CreateExpenseRequest {
   note: string;
   date: string;
 }
+
+export interface RegisterUser {
+  email: string;
+  username: string;
+  password: string;
+}
+
+export interface CreateWalletRequest {
+  name: string;
+  currency: string;
+}
+
+export interface Wallet {
+  name: string;
+  currency: string;
+  id: string;
+}

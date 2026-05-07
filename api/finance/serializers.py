@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from finance.models import IncomeCategory, ExpenseCategory, Income, Transaction
+from finance.models import IncomeCategory, ExpenseCategory, Income, Transaction, Wallet
 
 
 class IncomeCategorySerializer(serializers.ModelSerializer):
@@ -41,3 +41,11 @@ class TransactionSerializer(serializers.ModelSerializer):
         if value.user != self.context['request'].user:
             raise serializers.ValidationError("Invalid category.")
         return value
+
+
+class WalletSerializer(serializers.ModelSerializer):
+    user = serializers.ReadOnlyField(source="user.username")
+
+    class Meta:
+        model = Wallet
+        fields = ['user', 'name', 'currency', 'id']

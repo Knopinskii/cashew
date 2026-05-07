@@ -9,6 +9,7 @@ router.register('income-categories', views.IncomeCategoryViewSet)
 router.register('expense-categories', views.ExpenseCategoryViewSet)
 router.register('incomes', views.IncomeViewSet)
 router.register('transactions', views.TransactionViewSet)
+router.register('wallets', views.WalletViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),

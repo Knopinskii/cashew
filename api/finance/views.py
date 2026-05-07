@@ -1,6 +1,6 @@
 from rest_framework import viewsets
-from finance.models import IncomeCategory, ExpenseCategory, Income, Transaction
-from finance.serializers import IncomeCategorySerializer, ExpenseCategorySerializer, IncomeSerializer, TransactionSerializer
+from finance.models import IncomeCategory, ExpenseCategory, Income, Transaction, Wallet
+from finance.serializers import IncomeCategorySerializer, ExpenseCategorySerializer, IncomeSerializer, TransactionSerializer, WalletSerializer
 
 class BaseViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
@@ -27,3 +27,7 @@ class TransactionViewSet(BaseViewSet):
     serializer_class = TransactionSerializer
     queryset = Transaction.objects.none()
 
+
+class WalletViewSet(BaseViewSet):
+    serializer_class = WalletSerializer
+    queryset = Wallet.objects.none()
