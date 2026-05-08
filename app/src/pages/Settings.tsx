@@ -1,7 +1,21 @@
 import { Card } from "../components/ui";
 import Navbar from "../components/Navbar";
+import { useEffect, useState } from "react";
+import { getMe } from "../services/api/auth.api";
 
 export default function Settings() {
+  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
+
+  useEffect(() => {
+    async function fetch() {
+      const user = await getMe();
+      setEmail(user.email);
+      setUsername(user.username);
+    }
+    fetch();
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
@@ -11,11 +25,11 @@ export default function Settings() {
         <Card>
           <div className="px-5 py-4 flex items-center gap-4">
             <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold text-sm">
-              VK
+              {username.charAt(0).toUpperCase()}
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-900">Vladimir</p>
-              <p className="text-xs text-gray-400">vladimir@example.com</p>
+              <p className="text-sm font-medium text-gray-900">{username}</p>
+              <p className="text-xs text-gray-400">{email}</p>
             </div>
           </div>
         </Card>

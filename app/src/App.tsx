@@ -16,10 +16,7 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
-      <Route
-        path="/dashboard"
-        element={<ProtectedRoute element={<Dashboard />} />}
-      />
+      <Route path="/dashboard" element={<ProtectedRoute element={<Dashboard />} />} />
       <Route path="/register" element={<Register />} />
       <Route path="/settings" element={<ProtectedRoute element={<Settings />} />} />
       <Route path="*" element={<Navigate to="/login" />} />

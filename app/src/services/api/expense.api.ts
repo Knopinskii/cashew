@@ -1,0 +1,46 @@
+import type { Transaction, ExpenseCategory, CreateExpenseRequest } from "../../types";
+import { apiRequest } from "./apiClient";
+
+export async function getExpenses() {
+  return apiRequest<Transaction[]>({
+    url: "/api/finance/transactions/",
+    method: "GET",
+  });
+}
+
+export async function createExpense(data: CreateExpenseRequest) {
+  return apiRequest<Transaction>({
+    url: "/api/finance/transactions/",
+    method: "POST",
+    data,
+  });
+}
+
+export async function deleteExpense(id: string) {
+  return apiRequest<void>({
+    url: `/api/finance/transactions/${id}/`,
+    method: "DELETE",
+  });
+}
+
+export async function getExpenseCategories() {
+  return apiRequest<ExpenseCategory[]>({
+    url: "/api/finance/expense-categories/",
+    method: "GET",
+  });
+}
+
+export async function createExpenseCategory(name: string, monthly_limit?: string) {
+  return apiRequest<ExpenseCategory>({
+    url: "/api/finance/expense-categories/",
+    method: "POST",
+    data: { name, monthly_limit },
+  });
+}
+
+export async function deleteExpenseCategory(id: string) {
+  return apiRequest<void>({
+    url: `/api/finance/expense-categories/${id}/`,
+    method: "DELETE",
+  });
+}
