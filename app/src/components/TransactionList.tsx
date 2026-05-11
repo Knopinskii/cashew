@@ -1,22 +1,59 @@
-const mockTransactions = [
-  { id: "1", type: "expense", category: "Food", amount: "12.50", date: "2026-05-07", note: "Groceries" },
-  { id: "2", type: "income", category: "Salary", amount: "3000.00", date: "2026-05-07", note: "" },
-  { id: "3", type: "expense", category: "Transport", amount: "45.00", date: "2026-05-06", note: "Taxi" },
-  { id: "4", type: "expense", category: "Food", amount: "8.99", date: "2026-05-06", note: "Coffee" },
-  { id: "5", type: "income", category: "Freelance", amount: "500.00", date: "2026-05-05", note: "Project" },
-  { id: "6", type: "expense", category: "Transport", amount: "33.96", date: "2026-05-05", note: "" },
-];
+import type { Income, Transaction } from "../types";
+import { getCurrencySymbol } from "../utils/currency";
 
-function groupByDate(items: typeof mockTransactions) {
+type UnifiedTransaction = {
+  id: string;
+  type: "income" | "expense";
+  category: string;
+  amount: string;
+  date: string;
+  note: string;
+};
+
+function toUnified(incomes: Income[], expenses: Transaction[]): UnifiedTransaction[] {
+  const inc = incomes.map((i) => ({
+    id: String(i.id),
+    type: "income" as const,
+    category: i.category_detail.name,
+    amount: i.amount,
+    date: i.date,
+    note: i.note,
+  }));
+  const exp = expenses.map((e) => ({
+    id: String(e.id),
+    type: "expense" as const,
+    category: e.category_detail.name,
+    amount: e.amount,
+    date: e.date,
+    note: e.note,
+  }));
+  return [...inc, ...exp].sort((a, b) => b.date.localeCompare(a.date));
+}
+
+function groupByDate(items: UnifiedTransaction[]) {
   return items.reduce((acc, item) => {
     if (!acc[item.date]) acc[item.date] = [];
     acc[item.date].push(item);
     return acc;
-  }, {} as Record<string, typeof mockTransactions>);
+  }, {} as Record<string, UnifiedTransaction[]>);
 }
 
-export default function TransactionList() {
-  const grouped = groupByDate(mockTransactions);
+export default function TransactionList({
+  incomes,
+  expenses,
+  currency,
+}: {
+  incomes: Income[];
+  expenses: Transaction[];
+  currency: string;
+}) {
+  const symbol = getCurrencySymbol(currency);
+  const unified = toUnified(incomes, expenses);
+  const grouped = groupByDate(unified);
+
+  if (unified.length === 0) {
+    return <p className="text-sm text-gray-400 text-center py-12">No transactions yet</p>;
+  }
 
   return (
     <div className="space-y-4">
@@ -27,7 +64,7 @@ export default function TransactionList() {
             <p className="text-xs text-gray-400">
               {items
                 .reduce((sum, i) => i.type === "expense" ? sum - parseFloat(i.amount) : sum + parseFloat(i.amount), 0)
-                .toFixed(2)} €
+                .toFixed(2)} {symbol}
             </p>
           </div>
           <div className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">
@@ -38,7 +75,7 @@ export default function TransactionList() {
                   {item.note && <p className="text-xs text-gray-400 mt-0.5">{item.note}</p>}
                 </div>
                 <p className={`text-sm font-semibold ${item.type === "income" ? "text-green-600" : "text-red-500"}`}>
-                  {item.type === "income" ? "+" : "-"}${item.amount}
+                  {item.type === "income" ? "+" : "-"}{symbol}{item.amount}
                 </p>
               </div>
             ))}

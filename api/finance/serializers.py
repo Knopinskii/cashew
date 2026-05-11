@@ -22,7 +22,7 @@ class IncomeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Income
-        fields = ['id', 'category', 'amount', 'note', 'date', 'user','category_detail']
+        fields = ['id', 'category', 'amount', 'note', 'date', 'user', 'wallet', 'category_detail']
 
     def validate_category(self, value):
         if value.user != self.context['request'].user:
@@ -35,7 +35,7 @@ class TransactionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Transaction
-        fields = ['id','category', 'amount', 'note', 'date', 'user', 'category_detail']
+        fields = ['id', 'category', 'amount', 'note', 'date', 'user', 'wallet', 'category_detail']
 
     def validate_category(self, value):
         if value.user != self.context['request'].user:
