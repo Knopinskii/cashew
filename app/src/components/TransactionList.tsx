@@ -56,25 +56,25 @@ export default function TransactionList({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       {Object.entries(grouped).map(([date, items]) => (
         <div key={date}>
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">{date}</p>
-            <p className="text-xs text-gray-400">
+          <div className="flex items-center justify-between mb-2 px-1">
+            <p className="text-xs font-medium text-stone-400 uppercase tracking-widest">{date}</p>
+            <p className="text-xs text-stone-400">
               {items
                 .reduce((sum, i) => i.type === "expense" ? sum - parseFloat(i.amount) : sum + parseFloat(i.amount), 0)
                 .toFixed(2)} {symbol}
             </p>
           </div>
-          <div className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">
+          <div className="bg-white rounded-2xl shadow-sm divide-y divide-stone-50">
             {items.map((item) => (
-              <div key={item.id} className="flex items-center justify-between px-4 py-3">
+              <div key={item.id} className="flex items-center justify-between px-4 py-3.5">
                 <div>
-                  <p className="text-sm font-medium text-gray-900">{item.category}</p>
-                  {item.note && <p className="text-xs text-gray-400 mt-0.5">{item.note}</p>}
+                  <p className="text-sm font-medium text-sky-600">{item.category}</p>
+                  {item.note && <p className="text-xs text-stone-400 mt-0.5">{item.note}</p>}
                 </div>
-                <p className={`text-sm font-semibold ${item.type === "income" ? "text-green-600" : "text-red-500"}`}>
+                <p className={`text-sm font-semibold ${item.type === "income" ? "text-emerald-600" : "text-rose-500"}`}>
                   {item.type === "income" ? "+" : "-"}{symbol}{item.amount}
                 </p>
               </div>

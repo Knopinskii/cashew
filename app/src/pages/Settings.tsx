@@ -37,6 +37,9 @@ const TrashIcon = () => (
   </svg>
 );
 
+const inputClass = "border border-stone-200 rounded-2xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 w-full";
+const labelClass = "text-xs font-medium text-stone-400 uppercase tracking-wide";
+
 export default function Settings() {
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
@@ -46,16 +49,12 @@ export default function Settings() {
   const [walletName, setWalletName] = useState("");
   const [walletCurrency, setWalletCurrency] = useState("EUR");
 
-  const [expenseCategories, setExpenseCategories] = useState<ExpenseCategory[]>(
-    []
-  );
+  const [expenseCategories, setExpenseCategories] = useState<ExpenseCategory[]>([]);
   const [expenseOpen, setExpenseOpen] = useState(false);
   const [expenseName, setExpenseName] = useState("");
   const [expenseLimit, setExpenseLimit] = useState("");
 
-  const [incomeCategories, setIncomeCategories] = useState<IncomeCategory[]>(
-    []
-  );
+  const [incomeCategories, setIncomeCategories] = useState<IncomeCategory[]>([]);
   const [incomeOpen, setIncomeOpen] = useState(false);
   const [incomeName, setIncomeName] = useState("");
 
@@ -77,7 +76,6 @@ export default function Settings() {
     fetch();
   }, []);
 
-  // Wallet handlers
   async function handleCreateWallet() {
     if (!walletName) return;
     await createWallet({ name: walletName, currency: walletCurrency });
@@ -92,7 +90,6 @@ export default function Settings() {
     setWallets(await getWallets());
   }
 
-  // Expense category handlers
   async function handleCreateExpenseCategory() {
     if (!expenseName) return;
     await createExpenseCategory(expenseName, expenseLimit || undefined);
@@ -107,7 +104,6 @@ export default function Settings() {
     setExpenseCategories(await getExpenseCategories());
   }
 
-  // Income category handlers
   async function handleCreateIncomeCategory() {
     if (!incomeName) return;
     await createIncomeCategory(incomeName);
@@ -122,58 +118,54 @@ export default function Settings() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-stone-50">
       <Navbar />
 
-      <div className="max-w-2xl mx-auto px-6 py-8 space-y-6">
+      <div className="max-w-2xl mx-auto px-6 py-8 space-y-4">
         {/* User Info */}
         <Card>
           <div className="px-5 py-4 flex items-center gap-4">
-            <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold text-sm">
+            <div className="w-10 h-10 rounded-full bg-stone-100 flex items-center justify-center text-stone-600 font-semibold text-sm">
               {username.charAt(0).toUpperCase()}
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-900">{username}</p>
-              <p className="text-xs text-gray-400">{email}</p>
+              <p className="text-sm font-semibold text-stone-900">{username}</p>
+              <p className="text-xs text-stone-400">{email}</p>
             </div>
           </div>
         </Card>
 
         {/* Wallets */}
         <Card>
-          <div className="px-5 py-4 border-b border-gray-100">
+          <div className="px-5 py-4 border-b border-stone-50">
             <div className="flex items-center justify-between">
-              <h2 className="text-base font-semibold text-gray-900">Wallets</h2>
+              <h2 className="text-sm font-semibold text-stone-900">Wallets</h2>
               <button
                 onClick={() => setWalletOpen(true)}
-                className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors"
+                className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-stone-600 bg-stone-100 hover:bg-stone-200 rounded-2xl transition-colors"
               >
-                <span className="text-base leading-none">+</span> Add
+                + Add
               </button>
             </div>
             {walletOpen && (
-              <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200 space-y-3">
+              <div className="mt-4 p-4 bg-stone-50 rounded-2xl space-y-3">
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="flex flex-col gap-1">
-                    <label className="text-xs font-medium text-gray-500">
-                      Name
-                    </label>
+                  <div className="flex flex-col gap-1.5">
+                    <label className={labelClass}>Name</label>
                     <input
                       type="text"
                       placeholder="e.g. Cash"
                       value={walletName}
                       onChange={(e) => setWalletName(e.target.value)}
-                      className="border border-gray-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className={inputClass}
                     />
                   </div>
-                  <div className="flex flex-col gap-1">
-                    <label className="text-xs font-medium text-gray-500">
-                      Currency
-                    </label>
+                  <div className="flex flex-col gap-1.5">
+                    <label className={labelClass}>Currency</label>
                     <select
                       value={walletCurrency}
                       onChange={(e) => setWalletCurrency(e.target.value)}
-                      className="border border-gray-200 rounded-md px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className={inputClass}
                     >
                       <option value="USD">USD</option>
                       <option value="EUR">EUR</option>
@@ -182,16 +174,10 @@ export default function Settings() {
                   </div>
                 </div>
                 <div className="flex justify-end gap-2">
-                  <button
-                    onClick={() => setWalletOpen(false)}
-                    className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700"
-                  >
+                  <button onClick={() => setWalletOpen(false)} className="px-4 py-2 text-sm text-stone-400 hover:text-stone-600 transition-colors">
                     Cancel
                   </button>
-                  <button
-                    onClick={handleCreateWallet}
-                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md"
-                  >
+                  <button onClick={handleCreateWallet} className="px-4 py-2 text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 rounded-2xl transition-colors">
                     Save
                   </button>
                 </div>
@@ -199,22 +185,17 @@ export default function Settings() {
             )}
           </div>
           {wallets.length === 0 ? (
-            <p className="text-sm text-gray-400 px-5 py-6">No wallets yet</p>
+            <p className="text-sm text-stone-300 px-5 py-6">No wallets yet</p>
           ) : (
-            <div className="divide-y divide-gray-100">
+            <div className="divide-y divide-stone-50">
               {wallets.map((w) => (
-                <div
-                  key={w.id}
-                  className="flex items-center justify-between px-5 py-4"
-                >
+                <div key={w.id} className="flex items-center justify-between px-5 py-3.5">
                   <div>
-                    <p className="text-sm font-medium text-gray-900">
-                      {w.name}
-                    </p>
-                    <p className="text-xs text-gray-400 mt-0.5">{w.currency}</p>
+                    <p className="text-sm font-medium text-amber-600">{w.name}</p>
+                    <p className="text-xs text-stone-400 mt-0.5">{w.currency}</p>
                   </div>
                   <button
-                    className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors"
+                    className="p-1.5 text-stone-300 hover:text-amber-500 hover:bg-amber-50 rounded-2xl transition-colors"
                     onClick={() => handleDeleteWallet(w.id)}
                   >
                     <TrashIcon />
@@ -227,57 +208,45 @@ export default function Settings() {
 
         {/* Expense Categories */}
         <Card>
-          <div className="px-5 py-4 border-b border-gray-100">
+          <div className="px-5 py-4 border-b border-stone-50">
             <div className="flex items-center justify-between">
-              <h2 className="text-base font-semibold text-gray-900">
-                Expense Categories
-              </h2>
+              <h2 className="text-sm font-semibold text-stone-900">Expense Categories</h2>
               <button
                 onClick={() => setExpenseOpen(true)}
-                className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-white bg-red-500 hover:bg-red-600 rounded-md transition-colors"
+                className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-amber-600 bg-amber-50 hover:bg-amber-100 rounded-2xl transition-colors"
               >
-                <span className="text-base leading-none">+</span> Add
+                + Add
               </button>
             </div>
             {expenseOpen && (
-              <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200 space-y-3">
+              <div className="mt-4 p-4 bg-stone-50 rounded-2xl space-y-3">
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="flex flex-col gap-1">
-                    <label className="text-xs font-medium text-gray-500">
-                      Name
-                    </label>
+                  <div className="flex flex-col gap-1.5">
+                    <label className={labelClass}>Name</label>
                     <input
                       type="text"
                       placeholder="e.g. Food"
                       value={expenseName}
                       onChange={(e) => setExpenseName(e.target.value)}
-                      className="border border-gray-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                      className={inputClass}
                     />
                   </div>
-                  <div className="flex flex-col gap-1">
-                    <label className="text-xs font-medium text-gray-500">
-                      Monthly limit
-                    </label>
+                  <div className="flex flex-col gap-1.5">
+                    <label className={labelClass}>Monthly limit</label>
                     <input
                       type="number"
                       placeholder="0.00"
                       value={expenseLimit}
                       onChange={(e) => setExpenseLimit(e.target.value)}
-                      className="border border-gray-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                      className={inputClass}
                     />
                   </div>
                 </div>
                 <div className="flex justify-end gap-2">
-                  <button
-                    onClick={() => setExpenseOpen(false)}
-                    className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700"
-                  >
+                  <button onClick={() => setExpenseOpen(false)} className="px-4 py-2 text-sm text-stone-400 hover:text-stone-600 transition-colors">
                     Cancel
                   </button>
-                  <button
-                    onClick={handleCreateExpenseCategory}
-                    className="px-4 py-2 text-sm font-medium text-white bg-red-500 hover:bg-red-600 rounded-md"
-                  >
+                  <button onClick={handleCreateExpenseCategory} className="px-4 py-2 text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 rounded-2xl transition-colors">
                     Save
                   </button>
                 </div>
@@ -285,26 +254,19 @@ export default function Settings() {
             )}
           </div>
           {expenseCategories.length === 0 ? (
-            <p className="text-sm text-gray-400 px-5 py-6">No categories yet</p>
+            <p className="text-sm text-stone-300 px-5 py-6">No categories yet</p>
           ) : (
-            <div className="divide-y divide-gray-100">
+            <div className="divide-y divide-stone-50">
               {expenseCategories.map((c) => (
-                <div
-                  key={c.id}
-                  className="flex items-center justify-between px-5 py-4"
-                >
+                <div key={c.id} className="flex items-center justify-between px-5 py-3.5">
                   <div>
-                    <p className="text-sm font-medium text-gray-900">
-                      {c.name}
-                    </p>
+                    <p className="text-sm font-medium text-amber-600">{c.name}</p>
                     {c.monthly_limit && (
-                      <p className="text-xs text-gray-400 mt-0.5">
-                        Limit: {c.monthly_limit}
-                      </p>
+                      <p className="text-xs text-stone-400 mt-0.5">Limit: {c.monthly_limit}</p>
                     )}
                   </div>
                   <button
-                    className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors"
+                    className="p-1.5 text-stone-300 hover:text-amber-500 hover:bg-amber-50 rounded-2xl transition-colors"
                     onClick={() => handleDeleteExpenseCategory(String(c.id))}
                   >
                     <TrashIcon />
@@ -317,43 +279,33 @@ export default function Settings() {
 
         {/* Income Categories */}
         <Card>
-          <div className="px-5 py-4 border-b border-gray-100">
+          <div className="px-5 py-4 border-b border-stone-50">
             <div className="flex items-center justify-between">
-              <h2 className="text-base font-semibold text-gray-900">
-                Income Categories
-              </h2>
+              <h2 className="text-sm font-semibold text-stone-900">Income Categories</h2>
               <button
                 onClick={() => setIncomeOpen(true)}
-                className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-md transition-colors"
+                className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-stone-600 bg-stone-100 hover:bg-stone-200 rounded-2xl transition-colors"
               >
-                <span className="text-base leading-none">+</span> Add
+                + Add
               </button>
             </div>
             {incomeOpen && (
-              <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200 space-y-3">
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-gray-500">
-                    Name
-                  </label>
+              <div className="mt-4 p-4 bg-stone-50 rounded-2xl space-y-3">
+                <div className="flex flex-col gap-1.5">
+                  <label className={labelClass}>Name</label>
                   <input
                     type="text"
                     placeholder="e.g. Salary"
                     value={incomeName}
                     onChange={(e) => setIncomeName(e.target.value)}
-                    className="border border-gray-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className={inputClass}
                   />
                 </div>
                 <div className="flex justify-end gap-2">
-                  <button
-                    onClick={() => setIncomeOpen(false)}
-                    className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700"
-                  >
+                  <button onClick={() => setIncomeOpen(false)} className="px-4 py-2 text-sm text-stone-400 hover:text-stone-600 transition-colors">
                     Cancel
                   </button>
-                  <button
-                    onClick={handleCreateIncomeCategory}
-                    className="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-md"
-                  >
+                  <button onClick={handleCreateIncomeCategory} className="px-4 py-2 text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 rounded-2xl transition-colors">
                     Save
                   </button>
                 </div>
@@ -361,17 +313,14 @@ export default function Settings() {
             )}
           </div>
           {incomeCategories.length === 0 ? (
-            <p className="text-sm text-gray-400 px-5 py-6">No categories yet</p>
+            <p className="text-sm text-stone-300 px-5 py-6">No categories yet</p>
           ) : (
-            <div className="divide-y divide-gray-100">
+            <div className="divide-y divide-stone-50">
               {incomeCategories.map((c) => (
-                <div
-                  key={c.id}
-                  className="flex items-center justify-between px-5 py-4"
-                >
-                  <p className="text-sm font-medium text-gray-900">{c.name}</p>
+                <div key={c.id} className="flex items-center justify-between px-5 py-3.5">
+                  <p className="text-sm font-medium text-amber-600">{c.name}</p>
                   <button
-                    className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors"
+                    className="p-1.5 text-stone-300 hover:text-amber-500 hover:bg-amber-50 rounded-2xl transition-colors"
                     onClick={() => handleDeleteIncomeCategory(String(c.id))}
                   >
                     <TrashIcon />
