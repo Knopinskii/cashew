@@ -3,6 +3,7 @@ import Navbar from "../components/Navbar";
 import SummaryCards from "../components/SummaryCards";
 import TransactionList from "../components/TransactionList";
 import AddTransactionModal from "../components/AddTransactionModal";
+import type { UnifiedTransaction } from "../components/TransactionList";
 import type { Income, Transaction, Wallet } from "../types";
 import { getIncomes } from "../services/api/income.api";
 import { getExpenses } from "../services/api/expense.api";
@@ -13,6 +14,7 @@ export default function Dashboard() {
   const [expenses, setExpenses] = useState<Transaction[]>([]);
   const [wallets, setWallets] = useState<Wallet[]>([]);
   const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<UnifiedTransaction | undefined>();
   const [loading, setLoading] = useState(true);
 
   async function loadData() {
@@ -28,6 +30,11 @@ export default function Dashboard() {
     loadData();
   }, []);
 
+  function handleClose() {
+    setOpen(false);
+    setEditing(undefined);
+  }
+
   return (
     <div className="min-h-screen bg-stone-50">
       <Navbar />
@@ -40,19 +47,30 @@ export default function Dashboard() {
         ) : (
           <>
             <SummaryCards incomes={incomes} expenses={expenses} currency={wallets[0]?.currency ?? "EUR"} />
-            <TransactionList incomes={incomes} expenses={expenses} currency={wallets[0]?.currency ?? "EUR"} />
+            <TransactionList
+              incomes={incomes}
+              expenses={expenses}
+              currency={wallets[0]?.currency ?? "EUR"}
+              onEdit={(t) => { setEditing(t); setOpen(true); }}
+            />
           </>
         )}
       </div>
 
       <button
-        onClick={() => setOpen(true)}
+        onClick={() => { setEditing(undefined); setOpen(true); }}
         className="fixed bottom-8 right-8 w-14 h-14 bg-amber-600 hover:bg-amber-700 text-white rounded-full shadow-lg flex items-center justify-center text-2xl transition-colors"
       >
         +
       </button>
 
-      {open && <AddTransactionModal onClose={() => setOpen(false)} onSave={loadData} />}
+      {open && (
+        <AddTransactionModal
+          onClose={handleClose}
+          onSave={loadData}
+          editing={editing}
+        />
+      )}
     </div>
   );
 }

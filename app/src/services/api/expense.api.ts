@@ -16,6 +16,14 @@ export async function createExpense(data: CreateExpenseRequest) {
   });
 }
 
+export async function updateExpense(id: string, data: CreateExpenseRequest) {
+  return apiRequest<Transaction>({
+    url: `/api/finance/transactions/${id}/`,
+    method: "PATCH",
+    data,
+  });
+}
+
 export async function deleteExpense(id: string) {
   return apiRequest<void>({
     url: `/api/finance/transactions/${id}/`,

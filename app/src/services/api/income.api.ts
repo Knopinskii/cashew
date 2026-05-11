@@ -16,6 +16,14 @@ export async function createIncome(data: CreateIncomeRequest) {
   });
 }
 
+export async function updateIncome(id: string, data: CreateIncomeRequest) {
+  return apiRequest<Income>({
+    url: `/api/finance/incomes/${id}/`,
+    method: "PATCH",
+    data,
+  });
+}
+
 export async function deleteIncome(id: string) {
   return apiRequest<void>({
     url: `/api/finance/incomes/${id}/`,

@@ -23,6 +23,7 @@ export interface Income {
   note: string;
   date: string;
   user: string;
+  wallet: string;
 }
 
 export interface Transaction {
@@ -33,6 +34,7 @@ export interface Transaction {
   date: string;
   user: string;
   category_detail: ExpenseCategory;
+  wallet: string;
 }
 
 export interface LoginRequest {
