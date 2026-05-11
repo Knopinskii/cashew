@@ -1,5 +1,8 @@
+import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "./ui";
+import { getWallets } from "../services/api/wallet.api";
+import type { Wallet } from "../types";
 
 const navItems = [
   { label: "Transactions", path: "/dashboard" },
@@ -11,6 +14,11 @@ const navItems = [
 export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
+  const [wallets, setWallets] = useState<Wallet[]>([]);
+
+  useEffect(() => {
+    getWallets().then(setWallets);
+  }, []);
 
   function handleLogout() {
     localStorage.removeItem("token");
@@ -21,9 +29,14 @@ export default function Navbar() {
     <div className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between">
       <div className="flex items-center gap-2 w-40">
         <span className="text-xl font-semibold text-gray-900">Cashew</span>
-        <span className="text-sm text-gray-400 border border-gray-200 rounded-md px-2 py-1 cursor-pointer hover:bg-gray-50">
-          💳 Cash
-        </span>
+        {wallets[0] && (
+          <>
+            <span className="text-gray-200">|</span>
+            <span className="text-sm text-gray-400 hover:text-gray-600 transition-colors cursor-pointer">
+              {wallets[0].name}
+            </span>
+          </>
+        )}
       </div>
       <div className="flex items-center gap-1">
         {navItems.map((item) => (

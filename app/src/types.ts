@@ -5,19 +5,19 @@ export interface User {
 }
 
 export interface IncomeCategory {
-  id: number;
+  id: string;
   name: string;
 }
 
 export interface ExpenseCategory {
-  id: number;
+  id: string;
   name: string;
   monthly_limit: string | null;
 }
 
 export interface Income {
-  id: number;
-  category: number;
+  id: string;
+  category: string;
   category_detail: IncomeCategory;
   amount: string;
   note: string;
@@ -26,8 +26,8 @@ export interface Income {
 }
 
 export interface Transaction {
-  id: number;
-  category: number;
+  id: string;
+  category: string;
   amount: string;
   note: string;
   date: string;
@@ -45,17 +45,19 @@ export interface LoginResponse {
 }
 
 export interface CreateIncomeRequest {
-  category: number;
+  category: string;
   amount: string;
   note: string;
   date: string;
+  wallet: string;
 }
 
 export interface CreateExpenseRequest {
-  category: number;
+  category: string;
   amount: string;
   note: string;
   date: string;
+  wallet: string;
 }
 
 export interface RegisterUser {
