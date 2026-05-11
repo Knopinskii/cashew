@@ -15,35 +15,29 @@ export default function Register() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (password !== confirmPassword) {
-      setError("Password should be the same");
+      setError("Passwords don't match.");
       return;
     }
     try {
-      await register({
-        email,
-        username,
-        password,
-      });
+      await register({ email, username, password });
       navigate("/login");
-    } catch (e) {
+    } catch {
       setError("Registration failed. Please try again.");
-      console.error(e);
     }
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 w-full max-w-sm">
-        <h1 className="text-2xl font-semibold text-gray-900 mb-6">Sign up</h1>
+    <div className="min-h-screen bg-stone-50 flex items-center justify-center">
+      <div className="bg-white rounded-3xl shadow-sm p-8 w-full max-w-sm">
+        <h1 className="text-2xl font-semibold text-stone-900 mb-1">Create account</h1>
+        <p className="text-sm text-stone-400 mb-6">Start tracking your finances</p>
         <form className="space-y-4" onSubmit={handleSubmit}>
           <Input
             label="Email"
             type="email"
             placeholder="you@example.com"
             value={email}
-            onChange={(e) => {
-              setEmail(e.target.value);
-            }}
+            onChange={(e) => setEmail(e.target.value)}
           />
           <Input
             label="Username"
@@ -53,32 +47,28 @@ export default function Register() {
             onChange={(e) => setUsername(e.target.value)}
           />
           <Input
-            placeholder="••••••••"
             label="Password"
             type="password"
+            placeholder="••••••••"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
           <Input
-            placeholder="••••••••"
             label="Confirm password"
             type="password"
+            placeholder="••••••••"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
           />
+          {error && <p className="text-xs text-rose-500">{error}</p>}
           <Button type="submit" className="w-full justify-center">
             Sign up
           </Button>
         </form>
-        <p className="text-sm text-gray-500 text-center mt-4">
-          Already have an account?
-          <Link to="/login" className="text-blue-600 hover:underline">
-            Sign in
-          </Link>
+        <p className="text-sm text-stone-400 text-center mt-4">
+          Already have an account?{" "}
+          <Link to="/login" className="text-amber-600 hover:underline">Sign in</Link>
         </p>
-        {error && (
-          <p className="text-sm text-red-500 text-center mt-2">{error}</p>
-        )}
       </div>
     </div>
   );

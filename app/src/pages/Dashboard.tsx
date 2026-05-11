@@ -29,13 +29,13 @@ export default function Dashboard() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-stone-50">
       <Navbar />
 
       <div className="max-w-2xl mx-auto px-6 py-8 space-y-6">
         {loading ? (
           <div className="flex justify-center py-20">
-            <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+            <div className="w-8 h-8 border-4 border-stone-300 border-t-transparent rounded-full animate-spin" />
           </div>
         ) : (
           <>
@@ -47,7 +47,7 @@ export default function Dashboard() {
 
       <button
         onClick={() => setOpen(true)}
-        className="fixed bottom-8 right-8 w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg flex items-center justify-center text-2xl transition-colors"
+        className="fixed bottom-8 right-8 w-14 h-14 bg-amber-600 hover:bg-amber-700 text-white rounded-full shadow-lg flex items-center justify-center text-2xl transition-colors"
       >
         +
       </button>

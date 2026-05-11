@@ -23,9 +23,16 @@ class IncomeViewSet(BaseViewSet):
     serializer_class = IncomeSerializer
     queryset = Income.objects.none()
 
+    def get_queryset(self):
+        return Income.objects.filter(user=self.request.user).select_related('category')
+
 class TransactionViewSet(BaseViewSet):
     serializer_class = TransactionSerializer
     queryset = Transaction.objects.none()
+
+    def get_queryset(self):
+        return Transaction.objects.filter(user=self.request.user).select_related('category')
+
 
 
 class WalletViewSet(BaseViewSet):
