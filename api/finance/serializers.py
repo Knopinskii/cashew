@@ -28,6 +28,11 @@ class IncomeSerializer(serializers.ModelSerializer):
         if value.user != self.context['request'].user:
             raise serializers.ValidationError("Invalid category.")
         return value
+    
+    def validate_wallet(self, value):
+        if value.user != self.context['request'].user:
+            raise serializers.ValidationError("Invalid wallet.")
+        return value
 
 class TransactionSerializer(serializers.ModelSerializer):
     user = serializers.ReadOnlyField(source='user.username')
@@ -40,6 +45,11 @@ class TransactionSerializer(serializers.ModelSerializer):
     def validate_category(self, value):
         if value.user != self.context['request'].user:
             raise serializers.ValidationError("Invalid category.")
+        return value
+    
+    def validate_wallet(self, value):
+        if value.user != self.context['request'].user:
+            raise serializers.ValidationError("Invalid wallet.")
         return value
 
 
