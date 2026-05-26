@@ -78,3 +78,9 @@ export interface Wallet {
   currency: string;
   id: string;
 }
+
+export interface Stats {
+  category_name: string;
+  monthly_limit: string;
+  spent: string;
+}
