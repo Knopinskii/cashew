@@ -13,10 +13,12 @@ const labelClass = "text-xs font-medium text-stone-400 uppercase tracking-wide";
 export default function AddTransactionModal({
   onClose,
   onSave,
+  onDelete,
   editing,
 }: {
   onClose: () => void;
   onSave: () => void;
+  onDelete?: () => void;
   editing?: UnifiedTransaction;
 }) {
   const [formType, setFormType] = useState<"income" | "expense">(editing?.type ?? "expense");
@@ -31,7 +33,7 @@ export default function AddTransactionModal({
   const [error, setError] = useState("");
 
   useEffect(() => {
-    async function fetch() {
+    async function loadData() {
       const [exp, inc, wal] = await Promise.all([
         getExpenseCategories(),
         getIncomeCategories(),
@@ -45,7 +47,8 @@ export default function AddTransactionModal({
         setWallet(String(wal[0]?.id ?? ""));
       }
     }
-    fetch();
+    loadData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -142,12 +145,22 @@ export default function AddTransactionModal({
 
         {error && <p className="text-xs text-rose-500 text-center">{error}</p>}
 
-        <button
-          onClick={handleSave}
-          className="w-full py-3 text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 rounded-2xl transition-colors"
-        >
-          {editing ? "Save changes" : "Save"}
-        </button>
+        <div className="flex gap-2">
+          {editing && onDelete && (
+            <button
+              onClick={onDelete}
+              className="flex-1 py-3 text-sm font-medium text-rose-500 bg-rose-50 hover:bg-rose-100 rounded-2xl transition-colors"
+            >
+              Delete
+            </button>
+          )}
+          <button
+            onClick={handleSave}
+            className="flex-1 py-3 text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 rounded-2xl transition-colors"
+          >
+            {editing ? "Save changes" : "Save"}
+          </button>
+        </div>
       </div>
     </div>
   );
