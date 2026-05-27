@@ -5,8 +5,8 @@ import TransactionList from "../components/TransactionList";
 import AddTransactionModal from "../components/AddTransactionModal";
 import type { UnifiedTransaction } from "../components/TransactionList";
 import type { Income, Transaction, Wallet } from "../types";
-import { getIncomes } from "../services/api/income.api";
-import { getExpenses } from "../services/api/expense.api";
+import { getIncomes, deleteIncome } from "../services/api/income.api";
+import { getExpenses, deleteExpense } from "../services/api/expense.api";
 import { getWallets } from "../services/api/wallet.api";
 
 export default function Dashboard() {
@@ -19,7 +19,11 @@ export default function Dashboard() {
 
   async function loadData() {
     setLoading(true);
-    const [inc, exp, wal] = await Promise.all([getIncomes(), getExpenses(), getWallets()]);
+    const [inc, exp, wal] = await Promise.all([
+      getIncomes(),
+      getExpenses(),
+      getWallets(),
+    ]);
     setIncomes(inc);
     setExpenses(exp);
     setWallets(wal);
@@ -27,12 +31,24 @@ export default function Dashboard() {
   }
 
   useEffect(() => {
-    loadData();
+    void loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function handleClose() {
     setOpen(false);
     setEditing(undefined);
+  }
+
+  async function handleDelete() {
+    if (!editing) return;
+    if (editing.type === "expense") {
+      await deleteExpense(editing.id);
+    } else {
+      await deleteIncome(editing.id);
+    }
+    handleClose();
+    loadData();
   }
 
   return (
@@ -46,19 +62,29 @@ export default function Dashboard() {
           </div>
         ) : (
           <>
-            <SummaryCards incomes={incomes} expenses={expenses} currency={wallets[0]?.currency ?? "EUR"} />
+            <SummaryCards
+              incomes={incomes}
+              expenses={expenses}
+              currency={wallets[0]?.currency ?? "EUR"}
+            />
             <TransactionList
               incomes={incomes}
               expenses={expenses}
               currency={wallets[0]?.currency ?? "EUR"}
-              onEdit={(t) => { setEditing(t); setOpen(true); }}
+              onEdit={(t) => {
+                setEditing(t);
+                setOpen(true);
+              }}
             />
           </>
         )}
       </div>
 
       <button
-        onClick={() => { setEditing(undefined); setOpen(true); }}
+        onClick={() => {
+          setEditing(undefined);
+          setOpen(true);
+        }}
         className="fixed bottom-8 right-8 w-14 h-14 bg-amber-600 hover:bg-amber-700 text-white rounded-full shadow-lg flex items-center justify-center text-2xl transition-colors"
       >
         +
@@ -68,6 +94,7 @@ export default function Dashboard() {
         <AddTransactionModal
           onClose={handleClose}
           onSave={loadData}
+          onDelete={handleDelete}
           editing={editing}
         />
       )}
