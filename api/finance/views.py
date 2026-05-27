@@ -1,4 +1,4 @@
-from django.db.models import Sum
+from django.db.models import Sum, Q
 from django.utils import timezone
 from rest_framework import viewsets
 from rest_framework.response import Response
@@ -57,20 +57,22 @@ class WalletViewSet(BaseViewSet):
 class StatsView(APIView):
     def get(self, request):
         now = timezone.now()
-        categories = ExpenseCategory.objects.filter(user=request.user)
+        categories = ExpenseCategory.objects.filter(user=request.user).annotate(
+            spent=Sum(
+                'transaction__amount',
+                filter=Q(
+                    transaction__date__month=now.month,
+                    transaction__date__year=now.year,
+                )
+            )
+        )
 
         data = []
         for category in categories:
-            spent = Transaction.objects.filter(
-                category=category,
-                date__month=now.month,
-                date__year=now.year,
-            ).aggregate(Sum('amount'))['amount__sum']
-
             data.append({
                 'category_name': category.name,
                 'monthly_limit': category.monthly_limit,
-                'spent': spent,
+                'spent': category.spent or 0,
             })
 
         return Response(data)
