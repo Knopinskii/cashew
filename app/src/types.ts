@@ -81,6 +81,6 @@ export interface Wallet {
 
 export interface Stats {
   category_name: string;
-  monthly_limit: string;
-  spent: string;
+  monthly_limit: string | null;
+  spent: string | null;
 }
