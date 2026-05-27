@@ -68,7 +68,9 @@ export default function TransactionList({
       {Object.entries(grouped).map(([date, items]) => (
         <div key={date}>
           <div className="flex items-center justify-between mb-2 px-1">
-            <p className="text-xs font-medium text-stone-400 uppercase tracking-widest">{date}</p>
+            <p className="text-xs font-medium text-stone-400 uppercase tracking-widest">
+              {new Date(date).toLocaleDateString("en-US", { weekday: "short", day: "numeric", month: "short" })}
+            </p>
             <p className="text-xs text-stone-400">
               {items
                 .reduce((sum, i) => i.type === "expense" ? sum - parseFloat(i.amount) : sum + parseFloat(i.amount), 0)

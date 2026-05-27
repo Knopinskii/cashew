@@ -38,36 +38,48 @@ Cashew is a personal finance manager.
 - Error handling (401 interceptor, try/catch in modal)
 - BaseModel (UUID, created_at, updated_at)
 - Typed apiRequest<T>
+- Stats endpoint `/api/finance/stats/`
+- Plan page with progress bars
+- Currency symbols everywhere (modal, settings, plan page)
+- Day of week in transaction list
 
 ## Planned Features (in priority order)
 
 ### In Progress
-1. **Stats endpoint** — `/api/finance/stats/` returns spending per category for current month
-2. **Plan page** — progress bars per expense category vs monthly_limit
-3. **Month filter** — filter transactions by month on Dashboard
-4. **Zustand store** — global state for auth + active wallet
-5. **Reports page** — charts (recharts): spending by category, income/expenses by month
+1. **Fix: StatsView auth** — missing `IsAuthenticated` permission, any user can call it without token
+2. **Fix: spent can be None** — `aggregate(Sum('amount'))` returns `None` when no transactions, should return `0`
+3. **Fix: Stats types** — `monthly_limit` and `spent` should be `string | null` in TypeScript interface
+4. **Active wallet in Navbar** — dropdown to switch between wallets (requires Zustand)
+5. **Zustand store** — global state for active wallet, stop making `getWallets()` on every page separately
+6. **Delete transactions** — currently can only edit
+7. **Edit category limits** — currently can only delete and recreate
+8. **Month filter** — filter transactions by month on Dashboard
+9. **Reports page** — charts (recharts): spending by category, income/expenses by month
 
 ### Next
-6. **Funds system** — create funds (name, percentage), auto-distribute balance at end of month
-7. **OCR receipts via Claude** — photo → Claude Vision → suggested category → confirm → transaction
-8. **Analytics insights** — "spent 30% more on food this month", "money will last X days"
-9. **CSV import/export**
-10. **PWA** — install on phone
-11. **Telegram bot** — quick transaction adding
+10. **Funds system** — create funds (name, percentage), auto-distribute balance at end of month
+11. **OCR receipts via Claude** — photo → Claude Vision → suggested category → confirm → transaction
+12. **Analytics insights** — "spent 30% more on food this month", "money will last X days"
+13. **CSV import/export**
+14. **PWA** — install on phone
+15. **Telegram bot** — quick transaction adding
 
 ### Later
-12. **2FA, password reset, Google OAuth**
-13. **Shared budget** — invite partner/family to wallet
-14. **Deploy** — Docker + PostgreSQL + VPS + SSL + GitHub Actions CI/CD
+16. **2FA, password reset, Google OAuth**
+17. **Shared budget** — invite partner/family to wallet
+18. **Deploy** — Docker + PostgreSQL + VPS + SSL + GitHub Actions CI/CD
 
 ## Architecture To-Do
 - Service layer on backend
-- AuthContext / Zustand on frontend (in progress)
+- Zustand on frontend (in progress)
 - Swagger docs (DEBUG only)
 - health + check_auth endpoints
 - ExpiringTokenAuthentication
 - Integration tests for API
+- Pagination for transactions list
+- try/catch in all useEffect calls (currently only modal has it)
+- localStorage token is XSS-vulnerable — consider httpOnly cookie for production
+- SummaryCards shows all-time balance, not current month
 
 ## Code Rules
 - Always explain what the code does before writing it

@@ -18,6 +18,7 @@ import {
   getIncomeCategories,
 } from "../services/api/income.api";
 import type { Wallet, ExpenseCategory, IncomeCategory } from "../types";
+import { getCurrencySymbol } from "../utils/currency";
 
 const TrashIcon = () => (
   <svg
@@ -262,7 +263,7 @@ export default function Settings() {
                   <div>
                     <p className="text-sm font-medium text-amber-600">{c.name}</p>
                     {c.monthly_limit && (
-                      <p className="text-xs text-stone-400 mt-0.5">Limit: {c.monthly_limit}</p>
+                      <p className="text-xs text-stone-400 mt-0.5">Limit: {getCurrencySymbol(wallets[0]?.currency ?? "")}{c.monthly_limit}</p>
                     )}
                   </div>
                   <button
