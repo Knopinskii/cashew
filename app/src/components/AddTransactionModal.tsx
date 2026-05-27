@@ -4,6 +4,7 @@ import { getIncomeCategories, createIncome, updateIncome } from "../services/api
 import { getWallets } from "../services/api/wallet.api";
 import type { IncomeCategory, ExpenseCategory, Wallet } from "../types";
 import type { UnifiedTransaction } from "./TransactionList";
+import { getCurrencySymbol } from "../utils/currency";
 
 const selectClass = "border border-stone-200 rounded-2xl px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-amber-400 text-stone-800";
 const inputClass = "border border-stone-200 rounded-2xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400";
@@ -122,7 +123,12 @@ export default function AddTransactionModal({
           </div>
           <div className="flex flex-col gap-1.5">
             <label className={labelClass}>Amount</label>
-            <input type="number" placeholder="0.00" value={amount} onChange={(e) => setAmount(e.target.value)} className={inputClass} />
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-stone-400">
+                {getCurrencySymbol(wallets.find((w) => w.id === wallet)?.currency ?? "")}
+              </span>
+              <input type="number" placeholder="0.00" value={amount} onChange={(e) => setAmount(e.target.value)} className={`${inputClass} pl-7 w-full`} />
+            </div>
           </div>
           <div className="flex flex-col gap-1.5">
             <label className={labelClass}>Date</label>

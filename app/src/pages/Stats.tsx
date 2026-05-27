@@ -1,16 +1,20 @@
 import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
 import { getStats } from "../services/api/stats.api";
-import type { Stats } from "../types";
+import { getWallets } from "../services/api/wallet.api";
+import { getCurrencySymbol } from "../utils/currency";
+import type { Stats, Wallet } from "../types";
 
 export default function StatsPage() {
   const [stats, setStats] = useState<Stats[]>([]);
+  const [wallets, setWallets] = useState<Wallet[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function load() {
-      const data = await getStats();
+      const [data, wal] = await Promise.all([getStats(), getWallets()]);
       setStats(data);
+      setWallets(wal);
       setLoading(false);
     }
     load();
@@ -21,7 +25,12 @@ export default function StatsPage() {
       <Navbar />
 
       <div className="max-w-2xl mx-auto px-6 py-8 space-y-6">
-        <h1 className="text-xl font-semibold text-stone-800">Plan</h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-xl font-semibold text-stone-800">Plan</h1>
+          {wallets[0] && (
+            <span className="text-sm text-stone-400">{wallets[0].name} · {wallets[0].currency}</span>
+          )}
+        </div>
 
         {loading ? (
           <div className="flex justify-center py-20">
@@ -44,7 +53,7 @@ export default function StatsPage() {
                   <div className="flex justify-between items-center mb-3">
                     <span className="text-stone-700 font-medium">{item.category_name}</span>
                     <span className={`text-sm font-medium ${isOver ? "text-rose-500" : "text-stone-500"}`}>
-                      {spent.toLocaleString()} / {limit > 0 ? limit.toLocaleString() : "—"}
+                      {getCurrencySymbol(wallets[0]?.currency ?? "")}{spent.toLocaleString()} / {limit > 0 ? `${getCurrencySymbol(wallets[0]?.currency ?? "")}${limit.toLocaleString()}` : "—"}
                     </span>
                   </div>
 
