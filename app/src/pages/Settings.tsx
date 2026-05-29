@@ -11,6 +11,7 @@ import {
   createExpenseCategory,
   deleteExpenseCategory,
   getExpenseCategories,
+  updateExpenseCategory,
 } from "../services/api/expense.api";
 import {
   createIncomeCategory,
@@ -19,6 +20,22 @@ import {
 } from "../services/api/income.api";
 import type { Wallet, ExpenseCategory, IncomeCategory } from "../types";
 import { getCurrencySymbol } from "../utils/currency";
+
+const PencilIcon = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    className="w-4 h-4"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+  </svg>
+);
 
 const TrashIcon = () => (
   <svg
@@ -38,7 +55,8 @@ const TrashIcon = () => (
   </svg>
 );
 
-const inputClass = "border border-stone-200 rounded-2xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 w-full";
+const inputClass =
+  "border border-stone-200 rounded-2xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 w-full";
 const labelClass = "text-xs font-medium text-stone-400 uppercase tracking-wide";
 
 export default function Settings() {
@@ -50,12 +68,19 @@ export default function Settings() {
   const [walletName, setWalletName] = useState("");
   const [walletCurrency, setWalletCurrency] = useState("EUR");
 
-  const [expenseCategories, setExpenseCategories] = useState<ExpenseCategory[]>([]);
+  const [expenseCategories, setExpenseCategories] = useState<ExpenseCategory[]>(
+    []
+  );
   const [expenseOpen, setExpenseOpen] = useState(false);
   const [expenseName, setExpenseName] = useState("");
   const [expenseLimit, setExpenseLimit] = useState("");
 
-  const [incomeCategories, setIncomeCategories] = useState<IncomeCategory[]>([]);
+  const [editingLimitId, setEditingLimitId] = useState<string | null>(null);
+  const [editingLimitValue, setEditingLimitValue] = useState("");
+
+  const [incomeCategories, setIncomeCategories] = useState<IncomeCategory[]>(
+    []
+  );
   const [incomeOpen, setIncomeOpen] = useState(false);
   const [incomeName, setIncomeName] = useState("");
 
@@ -103,6 +128,22 @@ export default function Settings() {
   async function handleDeleteExpenseCategory(id: string) {
     await deleteExpenseCategory(id);
     setExpenseCategories(await getExpenseCategories());
+  }
+
+  function startEditingLimit(c: ExpenseCategory) {
+    setEditingLimitId(String(c.id));
+    setEditingLimitValue(c.monthly_limit ?? "");
+  }
+
+  async function handleSaveLimit(id: string) {
+    await updateExpenseCategory(id, editingLimitValue || null);
+    setExpenseCategories(await getExpenseCategories());
+    setEditingLimitId(null);
+  }
+
+  function handleCancelLimit() {
+    setEditingLimitId(null);
+    setEditingLimitValue("");
   }
 
   async function handleCreateIncomeCategory() {
@@ -175,10 +216,16 @@ export default function Settings() {
                   </div>
                 </div>
                 <div className="flex justify-end gap-2">
-                  <button onClick={() => setWalletOpen(false)} className="px-4 py-2 text-sm text-stone-400 hover:text-stone-600 transition-colors">
+                  <button
+                    onClick={() => setWalletOpen(false)}
+                    className="px-4 py-2 text-sm text-stone-400 hover:text-stone-600 transition-colors"
+                  >
                     Cancel
                   </button>
-                  <button onClick={handleCreateWallet} className="px-4 py-2 text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 rounded-2xl transition-colors">
+                  <button
+                    onClick={handleCreateWallet}
+                    className="px-4 py-2 text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 rounded-2xl transition-colors"
+                  >
                     Save
                   </button>
                 </div>
@@ -190,10 +237,17 @@ export default function Settings() {
           ) : (
             <div className="divide-y divide-stone-50">
               {wallets.map((w) => (
-                <div key={w.id} className="flex items-center justify-between px-5 py-3.5">
+                <div
+                  key={w.id}
+                  className="flex items-center justify-between px-5 py-3.5"
+                >
                   <div>
-                    <p className="text-sm font-medium text-amber-600">{w.name}</p>
-                    <p className="text-xs text-stone-400 mt-0.5">{w.currency}</p>
+                    <p className="text-sm font-medium text-amber-600">
+                      {w.name}
+                    </p>
+                    <p className="text-xs text-stone-400 mt-0.5">
+                      {w.currency}
+                    </p>
                   </div>
                   <button
                     className="p-1.5 text-stone-300 hover:text-amber-500 hover:bg-amber-50 rounded-2xl transition-colors"
@@ -211,7 +265,9 @@ export default function Settings() {
         <Card>
           <div className="px-5 py-4 border-b border-stone-50">
             <div className="flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-stone-900">Expense Categories</h2>
+              <h2 className="text-sm font-semibold text-stone-900">
+                Expense Categories
+              </h2>
               <button
                 onClick={() => setExpenseOpen(true)}
                 className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-amber-600 bg-amber-50 hover:bg-amber-100 rounded-2xl transition-colors"
@@ -244,10 +300,16 @@ export default function Settings() {
                   </div>
                 </div>
                 <div className="flex justify-end gap-2">
-                  <button onClick={() => setExpenseOpen(false)} className="px-4 py-2 text-sm text-stone-400 hover:text-stone-600 transition-colors">
+                  <button
+                    onClick={() => setExpenseOpen(false)}
+                    className="px-4 py-2 text-sm text-stone-400 hover:text-stone-600 transition-colors"
+                  >
                     Cancel
                   </button>
-                  <button onClick={handleCreateExpenseCategory} className="px-4 py-2 text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 rounded-2xl transition-colors">
+                  <button
+                    onClick={handleCreateExpenseCategory}
+                    className="px-4 py-2 text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 rounded-2xl transition-colors"
+                  >
                     Save
                   </button>
                 </div>
@@ -255,23 +317,65 @@ export default function Settings() {
             )}
           </div>
           {expenseCategories.length === 0 ? (
-            <p className="text-sm text-stone-300 px-5 py-6">No categories yet</p>
+            <p className="text-sm text-stone-300 px-5 py-6">
+              No categories yet
+            </p>
           ) : (
             <div className="divide-y divide-stone-50">
               {expenseCategories.map((c) => (
-                <div key={c.id} className="flex items-center justify-between px-5 py-3.5">
-                  <div>
-                    <p className="text-sm font-medium text-amber-600">{c.name}</p>
-                    {c.monthly_limit && (
-                      <p className="text-xs text-stone-400 mt-0.5">Limit: {getCurrencySymbol(wallets[0]?.currency ?? "")}{c.monthly_limit}</p>
+                <div
+                  key={c.id}
+                  className="flex items-center justify-between px-5 py-3.5"
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-amber-600">
+                      {c.name}
+                    </p>
+                    {editingLimitId === String(c.id) ? (
+                      <div className="flex items-center gap-2 mt-1">
+                        <input
+                          type="number"
+                          autoFocus
+                          value={editingLimitValue}
+                          onChange={(e) => setEditingLimitValue(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") handleSaveLimit(String(c.id));
+                            if (e.key === "Escape") handleCancelLimit();
+                          }}
+                          onBlur={() => handleSaveLimit(String(c.id))}
+                          placeholder="0.00"
+                          className="w-28 border border-amber-300 rounded-xl px-2 py-0.5 text-xs focus:outline-none focus:ring-2 focus:ring-amber-400"
+                        />
+                        <button
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={handleCancelLimit}
+                          className="text-xs text-stone-400 hover:text-stone-600 transition-colors"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-stone-400 mt-0.5">
+                        {c.monthly_limit
+                          ? `Limit: ${getCurrencySymbol(wallets[0]?.currency ?? "")}${c.monthly_limit}`
+                          : "No limit"}
+                      </p>
                     )}
                   </div>
-                  <button
-                    className="p-1.5 text-stone-300 hover:text-amber-500 hover:bg-amber-50 rounded-2xl transition-colors"
-                    onClick={() => handleDeleteExpenseCategory(String(c.id))}
-                  >
-                    <TrashIcon />
-                  </button>
+                  <div className="flex items-center gap-1 ml-2">
+                    <button
+                      className="p-1.5 text-stone-300 hover:text-amber-500 hover:bg-amber-50 rounded-2xl transition-colors"
+                      onClick={() => startEditingLimit(c)}
+                    >
+                      <PencilIcon />
+                    </button>
+                    <button
+                      className="p-1.5 text-stone-300 hover:text-amber-500 hover:bg-amber-50 rounded-2xl transition-colors"
+                      onClick={() => handleDeleteExpenseCategory(String(c.id))}
+                    >
+                      <TrashIcon />
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -282,7 +386,9 @@ export default function Settings() {
         <Card>
           <div className="px-5 py-4 border-b border-stone-50">
             <div className="flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-stone-900">Income Categories</h2>
+              <h2 className="text-sm font-semibold text-stone-900">
+                Income Categories
+              </h2>
               <button
                 onClick={() => setIncomeOpen(true)}
                 className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-stone-600 bg-stone-100 hover:bg-stone-200 rounded-2xl transition-colors"
@@ -303,10 +409,16 @@ export default function Settings() {
                   />
                 </div>
                 <div className="flex justify-end gap-2">
-                  <button onClick={() => setIncomeOpen(false)} className="px-4 py-2 text-sm text-stone-400 hover:text-stone-600 transition-colors">
+                  <button
+                    onClick={() => setIncomeOpen(false)}
+                    className="px-4 py-2 text-sm text-stone-400 hover:text-stone-600 transition-colors"
+                  >
                     Cancel
                   </button>
-                  <button onClick={handleCreateIncomeCategory} className="px-4 py-2 text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 rounded-2xl transition-colors">
+                  <button
+                    onClick={handleCreateIncomeCategory}
+                    className="px-4 py-2 text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 rounded-2xl transition-colors"
+                  >
                     Save
                   </button>
                 </div>
@@ -314,11 +426,16 @@ export default function Settings() {
             )}
           </div>
           {incomeCategories.length === 0 ? (
-            <p className="text-sm text-stone-300 px-5 py-6">No categories yet</p>
+            <p className="text-sm text-stone-300 px-5 py-6">
+              No categories yet
+            </p>
           ) : (
             <div className="divide-y divide-stone-50">
               {incomeCategories.map((c) => (
-                <div key={c.id} className="flex items-center justify-between px-5 py-3.5">
+                <div
+                  key={c.id}
+                  className="flex items-center justify-between px-5 py-3.5"
+                >
                   <p className="text-sm font-medium text-amber-600">{c.name}</p>
                   <button
                     className="p-1.5 text-stone-300 hover:text-amber-500 hover:bg-amber-50 rounded-2xl transition-colors"
