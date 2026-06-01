@@ -7,6 +7,7 @@ import {
   deleteWallet,
   getWallets,
 } from "../services/api/wallet.api";
+import { useWalletStore } from "../store/useWalletStore";
 import {
   createExpenseCategory,
   deleteExpenseCategory,
@@ -63,6 +64,11 @@ export default function Settings() {
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
 
+  const storeWallets = useWalletStore((s) => s.wallets);
+  const setStoreWallets = useWalletStore((s) => s.setWallets);
+  const activeWallet = useWalletStore((s) => s.activeWallet);
+  const activeWalletObj = storeWallets.find((w) => w.id === activeWallet);
+
   const [wallets, setWallets] = useState<Wallet[]>([]);
   const [walletOpen, setWalletOpen] = useState(false);
   const [walletName, setWalletName] = useState("");
@@ -105,7 +111,9 @@ export default function Settings() {
   async function handleCreateWallet() {
     if (!walletName) return;
     await createWallet({ name: walletName, currency: walletCurrency });
-    setWallets(await getWallets());
+    const updated = await getWallets();
+    setWallets(updated);
+    setStoreWallets(updated);
     setWalletName("");
     setWalletCurrency("EUR");
     setWalletOpen(false);
@@ -113,7 +121,9 @@ export default function Settings() {
 
   async function handleDeleteWallet(id: string) {
     await deleteWallet(id);
-    setWallets(await getWallets());
+    const updated = await getWallets();
+    setWallets(updated);
+    setStoreWallets(updated);
   }
 
   async function handleCreateExpenseCategory() {
@@ -357,7 +367,7 @@ export default function Settings() {
                     ) : (
                       <p className="text-xs text-stone-400 mt-0.5">
                         {c.monthly_limit
-                          ? `Limit: ${getCurrencySymbol(wallets[0]?.currency ?? "")}${c.monthly_limit}`
+                          ? `Limit: ${getCurrencySymbol(activeWalletObj?.currency ?? "")}${c.monthly_limit}`
                           : "No limit"}
                       </p>
                     )}

@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { getExpenseCategories, createExpense, updateExpense } from "../services/api/expense.api";
 import { getIncomeCategories, createIncome, updateIncome } from "../services/api/income.api";
-import { getWallets } from "../services/api/wallet.api";
-import type { IncomeCategory, ExpenseCategory, Wallet } from "../types";
+import type { IncomeCategory, ExpenseCategory } from "../types";
 import type { UnifiedTransaction } from "./TransactionList";
 import { getCurrencySymbol } from "../utils/currency";
+import { useWalletStore } from "../store/useWalletStore";
 
 const selectClass = "border border-stone-200 rounded-2xl px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-amber-400 text-stone-800";
 const inputClass = "border border-stone-200 rounded-2xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400";
@@ -21,12 +21,14 @@ export default function AddTransactionModal({
   onDelete?: () => void;
   editing?: UnifiedTransaction;
 }) {
+  const wallets = useWalletStore((s) => s.wallets);
+  const activeWallet = useWalletStore((s) => s.activeWallet);
+
   const [formType, setFormType] = useState<"income" | "expense">(editing?.type ?? "expense");
   const [expenseCategories, setExpenseCategories] = useState<ExpenseCategory[]>([]);
   const [incomeCategories, setIncomeCategories] = useState<IncomeCategory[]>([]);
-  const [wallets, setWallets] = useState<Wallet[]>([]);
   const [category, setCategory] = useState(editing?.category ?? "");
-  const [wallet, setWallet] = useState(editing?.wallet ?? "");
+  const [wallet, setWallet] = useState(editing?.wallet ?? activeWallet ?? "");
   const [amount, setAmount] = useState(editing?.amount ?? "");
   const [note, setNote] = useState(editing?.note ?? "");
   const [date, setDate] = useState(editing?.date ?? new Date().toISOString().split("T")[0]);
@@ -34,17 +36,14 @@ export default function AddTransactionModal({
 
   useEffect(() => {
     async function loadData() {
-      const [exp, inc, wal] = await Promise.all([
+      const [exp, inc] = await Promise.all([
         getExpenseCategories(),
         getIncomeCategories(),
-        getWallets(),
       ]);
       setExpenseCategories(exp);
       setIncomeCategories(inc);
-      setWallets(wal);
       if (!editing) {
         setCategory(String(exp[0]?.id ?? ""));
-        setWallet(String(wal[0]?.id ?? ""));
       }
     }
     loadData();

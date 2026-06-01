@@ -1,20 +1,22 @@
 import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
 import { getStats } from "../services/api/stats.api";
-import { getWallets } from "../services/api/wallet.api";
 import { getCurrencySymbol } from "../utils/currency";
-import type { Stats, Wallet } from "../types";
+import { useWalletStore } from "../store/useWalletStore";
+import type { Stats } from "../types";
 
 export default function StatsPage() {
   const [stats, setStats] = useState<Stats[]>([]);
-  const [wallets, setWallets] = useState<Wallet[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const wallets = useWalletStore((s) => s.wallets);
+  const activeWallet = useWalletStore((s) => s.activeWallet);
+  const activeWalletObj = wallets.find((w) => w.id === activeWallet);
 
   useEffect(() => {
     async function load() {
-      const [data, wal] = await Promise.all([getStats(), getWallets()]);
+      const data = await getStats();
       setStats(data);
-      setWallets(wal);
       setLoading(false);
     }
     load();
@@ -27,8 +29,8 @@ export default function StatsPage() {
       <div className="max-w-2xl mx-auto px-6 py-8 space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-xl font-semibold text-stone-800">Plan</h1>
-          {wallets[0] && (
-            <span className="text-sm text-stone-400">{wallets[0].name} · {wallets[0].currency}</span>
+          {activeWalletObj && (
+            <span className="text-sm text-stone-400">{activeWalletObj.name} · {activeWalletObj.currency}</span>
           )}
         </div>
 
@@ -47,13 +49,14 @@ export default function StatsPage() {
               const limit = parseFloat(item.monthly_limit) || 0;
               const percent = limit > 0 ? Math.min((spent / limit) * 100, 100) : 0;
               const isOver = spent > limit && limit > 0;
+              const currency = getCurrencySymbol(activeWalletObj?.currency ?? "");
 
               return (
                 <div key={item.category_name} className="bg-white rounded-2xl p-5 shadow-sm">
                   <div className="flex justify-between items-center mb-3">
                     <span className="text-stone-700 font-medium">{item.category_name}</span>
                     <span className={`text-sm font-medium ${isOver ? "text-rose-500" : "text-stone-500"}`}>
-                      {getCurrencySymbol(wallets[0]?.currency ?? "")}{spent.toLocaleString()} / {limit > 0 ? `${getCurrencySymbol(wallets[0]?.currency ?? "")}${limit.toLocaleString()}` : "—"}
+                      {currency}{spent.toLocaleString()} / {limit > 0 ? `${currency}${limit.toLocaleString()}` : "—"}
                     </span>
                   </div>
 

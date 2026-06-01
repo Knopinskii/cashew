@@ -4,36 +4,39 @@ import SummaryCards from "../components/SummaryCards";
 import TransactionList from "../components/TransactionList";
 import AddTransactionModal from "../components/AddTransactionModal";
 import type { UnifiedTransaction } from "../components/TransactionList";
-import type { Income, Transaction, Wallet } from "../types";
+import type { Income, Transaction } from "../types";
 import { getIncomes, deleteIncome } from "../services/api/income.api";
 import { getExpenses, deleteExpense } from "../services/api/expense.api";
-import { getWallets } from "../services/api/wallet.api";
+import { useWalletStore } from "../store/useWalletStore";
 
 export default function Dashboard() {
   const [incomes, setIncomes] = useState<Income[]>([]);
   const [expenses, setExpenses] = useState<Transaction[]>([]);
-  const [wallets, setWallets] = useState<Wallet[]>([]);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<UnifiedTransaction | undefined>();
   const [loading, setLoading] = useState(true);
 
+  const wallets = useWalletStore((s) => s.wallets);
+  const activeWallet = useWalletStore((s) => s.activeWallet);
+
+  const activeWalletObj = wallets.find((w) => w.id === activeWallet);
+
   async function loadData() {
+    if (!activeWallet) return;
     setLoading(true);
-    const [inc, exp, wal] = await Promise.all([
-      getIncomes(),
-      getExpenses(),
-      getWallets(),
+    const [inc, exp] = await Promise.all([
+      getIncomes(activeWallet),
+      getExpenses(activeWallet),
     ]);
     setIncomes(inc);
     setExpenses(exp);
-    setWallets(wal);
     setLoading(false);
   }
 
   useEffect(() => {
     void loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [activeWallet]);
 
   function handleClose() {
     setOpen(false);
@@ -65,12 +68,12 @@ export default function Dashboard() {
             <SummaryCards
               incomes={incomes}
               expenses={expenses}
-              currency={wallets[0]?.currency ?? "EUR"}
+              currency={activeWalletObj?.currency ?? "EUR"}
             />
             <TransactionList
               incomes={incomes}
               expenses={expenses}
-              currency={wallets[0]?.currency ?? "EUR"}
+              currency={activeWalletObj?.currency ?? "EUR"}
               onEdit={(t) => {
                 setEditing(t);
                 setOpen(true);

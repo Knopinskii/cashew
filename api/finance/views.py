@@ -38,7 +38,12 @@ class IncomeViewSet(BaseViewSet):
     queryset = Income.objects.none()
 
     def get_queryset(self):
-        return Income.objects.filter(user=self.request.user).select_related('category', 'wallet')
+        qs = Income.objects.filter(user=self.request.user).select_related('category', 'wallet')
+        wallet_id = self.request.query_params.get('wallet_id')
+        if wallet_id:
+            qs = qs.filter(wallet__id=wallet_id)
+        return qs
+
 
 
 class TransactionViewSet(BaseViewSet):
@@ -46,7 +51,11 @@ class TransactionViewSet(BaseViewSet):
     queryset = Transaction.objects.none()
 
     def get_queryset(self):
-        return Transaction.objects.filter(user=self.request.user).select_related('category', 'wallet')
+        qs = Transaction.objects.filter(user=self.request.user).select_related('category', 'wallet')
+        wallet_id = self.request.query_params.get('wallet_id')
+        if wallet_id:
+            qs = qs.filter(wallet__id=wallet_id)
+        return qs
 
 
 class WalletViewSet(BaseViewSet):
