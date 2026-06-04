@@ -9,6 +9,11 @@ import { getIncomes, deleteIncome } from "../services/api/income.api";
 import { getExpenses, deleteExpense } from "../services/api/expense.api";
 import { useWalletStore } from "../store/useWalletStore";
 
+const MONTHS = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
+
 export default function Dashboard() {
   const [incomes, setIncomes] = useState<Income[]>([]);
   const [expenses, setExpenses] = useState<Transaction[]>([]);
@@ -18,6 +23,9 @@ export default function Dashboard() {
 
   const wallets = useWalletStore((s) => s.wallets);
   const activeWallet = useWalletStore((s) => s.activeWallet);
+  const month = useWalletStore((s) => s.month);
+  const year = useWalletStore((s) => s.year);
+  const setMonth = useWalletStore((s) => s.setMonth);
 
   const activeWalletObj = wallets.find((w) => w.id === activeWallet);
 
@@ -25,8 +33,8 @@ export default function Dashboard() {
     if (!activeWallet) return;
     setLoading(true);
     const [inc, exp] = await Promise.all([
-      getIncomes(activeWallet),
-      getExpenses(activeWallet),
+      getIncomes(activeWallet, month, year),
+      getExpenses(activeWallet, month, year),
     ]);
     setIncomes(inc);
     setExpenses(exp);
@@ -36,7 +44,7 @@ export default function Dashboard() {
   useEffect(() => {
     void loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeWallet]);
+  }, [activeWallet, month, year]);
 
   function handleClose() {
     setOpen(false);
@@ -59,6 +67,31 @@ export default function Dashboard() {
       <Navbar />
 
       <div className="max-w-2xl mx-auto px-6 py-8 space-y-6">
+        {/* Month switcher */}
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1 shrink-0 bg-stone-100 rounded-2xl px-3 py-1.5 text-xs font-medium text-stone-500">
+            Period <span className="text-stone-400">›</span>
+          </div>
+          <div className="flex items-center gap-3 overflow-x-auto scrollbar-none border-b border-stone-100 flex-1">
+            {MONTHS.map((m, i) => {
+              const isActive = i + 1 === month;
+              return (
+                <button
+                  key={m}
+                  onClick={() => setMonth(i + 1)}
+                  className={`shrink-0 pb-2 text-sm transition-colors border-b-2 whitespace-nowrap ${
+                    isActive
+                      ? "font-semibold text-stone-800 border-amber-500"
+                      : "font-normal text-stone-400 border-transparent hover:text-stone-600"
+                  }`}
+                >
+                  {m}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         {loading ? (
           <div className="flex justify-center py-20">
             <div className="w-8 h-8 border-4 border-stone-300 border-t-transparent rounded-full animate-spin" />
