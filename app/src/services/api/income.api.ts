@@ -1,11 +1,15 @@
 import type { Income, IncomeCategory, CreateIncomeRequest } from "../../types";
 import { apiRequest } from "./apiClient";
 
-export async function getIncomes(walletId?: string) {
+export async function getIncomes(
+  walletId?: string,
+  month?: number,
+  year?: number
+) {
   return apiRequest<Income[]>({
     url: "/api/finance/incomes/",
     method: "GET",
-    params: walletId ? { wallet_id: walletId } : undefined,
+    params: { wallet_id: walletId, month, year },
   });
 }
 

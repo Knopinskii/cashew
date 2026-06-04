@@ -5,11 +5,15 @@ import type {
 } from "../../types";
 import { apiRequest } from "./apiClient";
 
-export async function getExpenses(walletId?: string) {
+export async function getExpenses(
+  walletId?: string,
+  month?: number,
+  year?: number
+) {
   return apiRequest<Transaction[]>({
     url: "/api/finance/transactions/",
     method: "GET",
-    params: walletId ? { wallet_id: walletId } : undefined,
+    params: { wallet_id: walletId, month, year },
   });
 }
 

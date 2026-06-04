@@ -42,6 +42,12 @@ class IncomeViewSet(BaseViewSet):
         wallet_id = self.request.query_params.get('wallet_id')
         if wallet_id:
             qs = qs.filter(wallet__id=wallet_id)
+        month = self.request.query_params.get('month')
+        if month:
+            qs = qs.filter(date__month=month)
+        year = self.request.query_params.get('year')
+        if year: 
+            qs = qs.filter(date__year=year)
         return qs
 
 
@@ -55,6 +61,12 @@ class TransactionViewSet(BaseViewSet):
         wallet_id = self.request.query_params.get('wallet_id')
         if wallet_id:
             qs = qs.filter(wallet__id=wallet_id)
+        month = self.request.query_params.get('month')
+        if month:
+            qs = qs.filter(date__month=month)
+        year = self.request.query_params.get('year')
+        if year: 
+            qs = qs.filter(date__year=year)
         return qs
 
 
