@@ -79,6 +79,8 @@ export default function Dashboard() {
       <Navbar />
 
       <div className="max-w-2xl mx-auto px-4 sm:px-6 py-6 sm:py-8 pb-28 md:pb-8 space-y-6">
+        <h1 className="text-xl font-semibold text-stone-800">Transactions</h1>
+
         <PeriodSwitcher />
 
         {loading ? (

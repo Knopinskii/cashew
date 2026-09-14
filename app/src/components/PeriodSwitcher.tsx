@@ -2,8 +2,18 @@ import { useEffect, useRef } from "react";
 import { useWalletStore } from "../store/useWalletStore";
 
 const MONTHS = [
-  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
 ];
 
 export default function PeriodSwitcher() {
@@ -19,11 +29,15 @@ export default function PeriodSwitcher() {
     activeRef.current?.scrollIntoView({ block: "nearest", inline: "center" });
   }, [month]);
 
+  // The rule sits on the row rather than on the months alone, so it runs the
+  // full width; items-end puts the year chip and the months on the same bottom
+  // edge, which is the edge the line is drawn along. Previously the rule
+  // belonged to the strip and the chip stood 5px taller, crossing it.
   return (
-    <div className="flex items-center gap-2 sm:gap-3">
+    <div className="flex items-end gap-2 sm:gap-3 border-b border-stone-100">
       {/* Year stepper. Replaces the old static "Period ›" chip, which was
           decoration: the store had a year all along with no way to change it. */}
-      <div className="flex items-center gap-0.5 shrink-0 bg-stone-100 rounded-2xl px-1 py-1">
+      <div className="flex items-center gap-0.5 shrink-0 bg-stone-100 rounded-2xl px-1 py-1 mb-2">
         <button
           onClick={() => setYear(year - 1)}
           aria-label="Previous year"
@@ -43,7 +57,7 @@ export default function PeriodSwitcher() {
         </button>
       </div>
 
-      <div className="flex items-center gap-3 overflow-x-auto scrollbar-none border-b border-stone-100 flex-1">
+      <div className="flex items-center gap-3 overflow-x-auto scrollbar-none flex-1">
         {MONTHS.map((m, i) => {
           const isActive = i + 1 === month;
           return (
