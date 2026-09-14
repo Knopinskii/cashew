@@ -1,17 +1,35 @@
 from pathlib import Path
 from dotenv import load_dotenv
+from django.core.exceptions import ImproperlyConfigured
+import dj_database_url
 import os
 load_dotenv()
 
-
-SECRET_KEY = os.getenv("SECRET_KEY")
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-DEBUG = True
+def env_bool(name, default="False"):
+    """Env vars are always strings: bool("False") is True, so compare explicitly."""
+    return os.getenv(name, default).strip().lower() in ("true", "1", "yes", "on")
 
-ALLOWED_HOSTS = []
+
+def env_list(name, default=""):
+    """Comma-separated env var to list, ignoring blanks and stray spaces."""
+    return [item.strip() for item in os.getenv(name, default).split(",") if item.strip()]
+
+
+SECRET_KEY = os.getenv("SECRET_KEY")
+if not SECRET_KEY:
+    raise ImproperlyConfigured(
+        "SECRET_KEY is not set. Copy .env.example to .env and fill it in."
+    )
+
+# Default to False: leaving DEBUG on in production leaks the secret key and
+# database credentials on any error page. Dangerous behaviour opts in.
+DEBUG = env_bool("DEBUG")
+
+ALLOWED_HOSTS = env_list("ALLOWED_HOSTS", "localhost,127.0.0.1")
 
 
 # Application definition
@@ -61,10 +79,10 @@ DJOSER = {
 
 AUTH_USER_MODEL = 'users.User'
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-]
+CORS_ALLOWED_ORIGINS = env_list(
+    "CORS_ALLOWED_ORIGINS",
+    "http://localhost:5173,http://127.0.0.1:5173",
+)
 
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
@@ -101,10 +119,10 @@ WSGI_APPLICATION = "config.wsgi.application"
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    }
+    "default": dj_database_url.config(
+        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
+        conn_max_age=600,
+    )
 }
 
 
