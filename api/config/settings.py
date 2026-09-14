@@ -68,8 +68,13 @@ REST_FRAMEWORK = {
 from datetime import timedelta
 
 SIMPLE_JWT = {
-   'AUTH_HEADER_TYPES': ('JWT',),
-   'ACCESS_TOKEN_LIFETIME': timedelta(hours=24),
+    'AUTH_HEADER_TYPES': ('JWT',),
+    # Short access, long refresh. A 24 hour access token stays useful to
+    # whoever takes it for a whole day; an hour narrows that window, and the
+    # frontend renews it in the background so nobody notices. The refresh token
+    # is what keeps the user signed in, which is why it outlives it by a month.
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=30),
 }
 
 DJOSER = {

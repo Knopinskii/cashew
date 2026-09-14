@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button, Input } from "../components/ui";
 import { useNavigate, Link } from "react-router-dom";
 import { login } from "../services/api/auth.api";
+import { setTokens } from "../services/api/tokens";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -14,7 +15,7 @@ export default function Login() {
     e.preventDefault();
     try {
       const response = await login({ email, password });
-      localStorage.setItem("token", response.access);
+      setTokens(response.access, response.refresh);
       navigate("/dashboard");
     } catch {
       setError("Invalid email or password.");
