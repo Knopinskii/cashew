@@ -13,13 +13,19 @@ import {
   deleteExpenseCategory,
   getExpenseCategories,
   updateExpenseCategory,
+  updateExpenseCategoryType,
 } from "../services/api/expense.api";
 import {
   createIncomeCategory,
   deleteIncomeCategory,
   getIncomeCategories,
 } from "../services/api/income.api";
-import type { Wallet, ExpenseCategory, IncomeCategory } from "../types";
+import type {
+  Wallet,
+  ExpenseCategory,
+  IncomeCategory,
+  CategoryType,
+} from "../types";
 import { getCurrencySymbol } from "../utils/currency";
 import { ErrorState, SettingsSkeleton } from "../components/StateViews";
 
@@ -81,6 +87,7 @@ export default function Settings() {
   const [expenseOpen, setExpenseOpen] = useState(false);
   const [expenseName, setExpenseName] = useState("");
   const [expenseLimit, setExpenseLimit] = useState("");
+  const [expenseType, setExpenseType] = useState<CategoryType>("floating");
 
   const [editingLimitId, setEditingLimitId] = useState<string | null>(null);
   const [editingLimitValue, setEditingLimitValue] = useState("");
@@ -144,15 +151,29 @@ export default function Settings() {
 
   async function handleCreateExpenseCategory() {
     if (!expenseName) return;
-    await createExpenseCategory(expenseName, expenseLimit || undefined);
+    await createExpenseCategory(
+      expenseName,
+      expenseLimit || undefined,
+      expenseType
+    );
     setExpenseCategories(await getExpenseCategories());
     setExpenseName("");
     setExpenseLimit("");
+    setExpenseType("floating");
     setExpenseOpen(false);
   }
 
   async function handleDeleteExpenseCategory(id: string) {
     await deleteExpenseCategory(id);
+    setExpenseCategories(await getExpenseCategories());
+  }
+
+  // Every category created before the type existed defaults to floating, so
+  // the list needs a way to reclassify them, not just the creation form.
+  async function handleToggleType(c: ExpenseCategory) {
+    const next: CategoryType =
+      c.category_type === "stable" ? "floating" : "stable";
+    await updateExpenseCategoryType(String(c.id), next);
     setExpenseCategories(await getExpenseCategories());
   }
 
@@ -337,6 +358,29 @@ export default function Settings() {
                         />
                       </div>
                     </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className={labelClass}>Type</label>
+                      <div className="flex rounded-2xl bg-stone-100 p-1 gap-1">
+                        {(["floating", "stable"] as CategoryType[]).map((t) => (
+                          <button
+                            key={t}
+                            onClick={() => setExpenseType(t)}
+                            className={`flex-1 py-2 text-sm font-medium rounded-xl transition-colors ${
+                              expenseType === t
+                                ? "bg-white text-stone-800 shadow-sm"
+                                : "text-stone-400 hover:text-stone-600"
+                            }`}
+                          >
+                            {t === "floating" ? "Varies" : "Fixed"}
+                          </button>
+                        ))}
+                      </div>
+                      <p className="text-xs text-stone-400">
+                        {expenseType === "floating"
+                          ? "Groceries, eating out — the report tracks the pace."
+                          : "Rent, phone bill — the report tracks whether it is paid."}
+                      </p>
+                    </div>
                     <div className="flex justify-end gap-2">
                       <button
                         onClick={() => setExpenseOpen(false)}
@@ -404,6 +448,17 @@ export default function Settings() {
                         )}
                       </div>
                       <div className="flex items-center gap-1 ml-2">
+                        <button
+                          onClick={() => handleToggleType(c)}
+                          title="Fixed costs repeat unchanged; varying ones are compared by pace"
+                          className={`px-2 py-1 text-xs font-medium rounded-xl transition-colors ${
+                            c.category_type === "stable"
+                              ? "bg-stone-100 text-stone-600 hover:bg-stone-200"
+                              : "bg-amber-50 text-amber-700 hover:bg-amber-100"
+                          }`}
+                        >
+                          {c.category_type === "stable" ? "Fixed" : "Varies"}
+                        </button>
                         <button
                           className="p-1.5 text-stone-300 hover:text-amber-500 hover:bg-amber-50 rounded-2xl transition-colors"
                           onClick={() => startEditingLimit(c)}

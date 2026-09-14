@@ -13,9 +13,22 @@ class IncomeCategory(BaseModel):
         return self.name
     
 class ExpenseCategory(BaseModel):
+    STABLE = "stable"
+    FLOATING = "floating"
+    CATEGORY_TYPES = [
+        (STABLE, "Stable"),
+        (FLOATING, "Floating"),
+    ]
+
     name = models.CharField(max_length=30)
     user = models.ForeignKey("users.User", on_delete=models.CASCADE, related_name='expense_categories')
     monthly_limit = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    # Rent and a phone bill repeat unchanged: the only question is whether they
+    # are paid yet. Groceries swing month to month, where the pace is what
+    # matters. Reporting on both the same way makes both less useful.
+    category_type = models.CharField(
+        max_length=8, choices=CATEGORY_TYPES, default=FLOATING
+    )
 
     class Meta:
         verbose_name = "Expense Category"
