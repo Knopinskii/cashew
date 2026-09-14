@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { getStats } from "../services/api/stats.api";
-import { getCurrencySymbol } from "../utils/currency";
+import { formatMoney } from "../utils/currency";
 import { useWalletStore } from "../store/useWalletStore";
 import PeriodSwitcher from "../components/PeriodSwitcher";
 import { ErrorState, EmptyState, PlanSkeleton } from "../components/StateViews";
@@ -44,7 +44,20 @@ export default function StatsPage() {
   // not, and a bar that jumps from empty to full teaches nothing.
   const fixed = stats.filter((s) => s.category_type === "stable");
   const varying = stats.filter((s) => s.category_type !== "stable");
-  const currency = getCurrencySymbol(activeWalletObj?.currency ?? "");
+
+  const withLimit = stats.filter((item) => (item.monthly_limit ?? 0) > 0);
+  const totalLimit = withLimit.reduce(
+    (sum, i) => sum + (i.monthly_limit ?? 0),
+    0,
+  );
+  const totalSpent = withLimit.reduce((sum, i) => sum + (i.spent ?? 0), 0);
+  const overallPercent = totalLimit > 0 ? (totalSpent / totalLimit) * 100 : 0;
+  const overCount = withLimit.filter(
+    (i) => (i.spent ?? 0) >= (i.monthly_limit ?? 0),
+  ).length;
+
+  const money = (value: number) =>
+    formatMoney(value, activeWalletObj?.currency ?? "");
 
   return (
     <div className="min-h-screen bg-stone-50">
@@ -68,12 +81,55 @@ export default function StatsPage() {
           />
         ) : (
           <>
+            {totalLimit > 0 && (
+              <div className="bg-white rounded-2xl shadow-sm p-5 space-y-3">
+                <div className="flex items-baseline justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-medium text-stone-400 uppercase tracking-wide">
+                      Spent of budget
+                    </p>
+                    <p className="text-2xl font-semibold text-stone-900 tabular-nums">
+                      {money(totalSpent)}
+                      <span className="text-base font-normal text-stone-400">
+                        {" / "}
+                        {money(totalLimit)}
+                      </span>
+                    </p>
+                  </div>
+                  <span
+                    className={`text-sm font-semibold tabular-nums ${
+                      overallPercent >= 100 ? "text-rose-500" : "text-stone-500"
+                    }`}
+                  >
+                    {Math.round(overallPercent)}%
+                  </span>
+                </div>
+
+                <div className="w-full bg-stone-100 rounded-full h-2 overflow-hidden">
+                  <div
+                    className={`h-2 rounded-full transition-all ${
+                      overallPercent >= 100 ? "bg-rose-500" : "bg-amber-500"
+                    }`}
+                    style={{ width: `${Math.min(overallPercent, 100)}%` }}
+                  />
+                </div>
+
+                {overCount > 0 && (
+                  <p className="text-xs text-rose-500">
+                    {overCount}{" "}
+                    {overCount === 1 ? "category is" : "categories are"} at or
+                    over the limit
+                  </p>
+                )}
+              </div>
+            )}
+
             {fixed.length > 0 && (
               <div>
                 <p className="text-xs font-medium text-stone-400 uppercase tracking-widest mb-2 px-1">
                   Fixed
                 </p>
-                <div className="bg-white rounded-2xl shadow-sm divide-y divide-stone-50">
+                <div className="bg-white rounded-2xl shadow-sm overflow-hidden divide-y divide-stone-50">
                   {fixed.map((item) => {
                     const spent = item.spent ?? 0;
                     const limit = item.monthly_limit ?? 0;
@@ -81,10 +137,25 @@ export default function StatsPage() {
                     return (
                       <div
                         key={item.category_name}
-                        className="px-4 py-3.5 flex items-center justify-between gap-3"
+                        className={`px-4 py-3.5 flex items-center gap-3 ${
+                          paid ? "bg-emerald-50/60" : ""
+                        }`}
                       >
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium text-stone-800 truncate">
+                        <span
+                          className={`w-6 h-6 shrink-0 rounded-full flex items-center justify-center text-xs ${
+                            paid
+                              ? "bg-emerald-500 text-white"
+                              : "border-2 border-dashed border-stone-200 text-transparent"
+                          }`}
+                        >
+                          ✓
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <p
+                            className={`text-sm font-medium truncate ${
+                              paid ? "text-emerald-900" : "text-stone-800"
+                            }`}
+                          >
                             {item.category_name}
                           </p>
                           <p
@@ -93,18 +164,18 @@ export default function StatsPage() {
                             }`}
                           >
                             {paid
-                              ? "paid"
+                              ? "paid this month"
                               : limit > 0
-                                ? `not paid yet · usually ${currency}${limit.toLocaleString()}`
+                                ? `not paid yet · usually ${money(limit)}`
                                 : "not paid yet"}
                           </p>
                         </div>
                         <span
                           className={`text-sm font-semibold shrink-0 tabular-nums ${
-                            paid ? "text-stone-800" : "text-stone-300"
+                            paid ? "text-emerald-700" : "text-stone-300"
                           }`}
                         >
-                          {paid ? `${currency}${spent.toLocaleString()}` : "—"}
+                          {paid ? money(spent) : "—"}
                         </span>
                       </div>
                     );
@@ -118,37 +189,52 @@ export default function StatsPage() {
                 <p className="text-xs font-medium text-stone-400 uppercase tracking-widest mb-2 px-1">
                   Varies
                 </p>
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {varying.map((item) => {
                     const spent = item.spent ?? 0;
                     const limit = item.monthly_limit ?? 0;
+                    // At the limit is not "within" it: the budget is gone.
+                    const isOver = limit > 0 && spent >= limit;
                     const percent =
                       limit > 0 ? Math.min((spent / limit) * 100, 100) : 0;
-                    const isOver = spent > limit && limit > 0;
+                    const left = limit - spent;
 
                     return (
                       <div
                         key={item.category_name}
-                        className="bg-white rounded-2xl p-5 shadow-sm"
+                        className={`rounded-2xl p-4 shadow-sm ${
+                          isOver ? "bg-rose-50" : "bg-white"
+                        }`}
                       >
-                        <div className="flex justify-between items-center mb-3">
-                          <span className="text-stone-700 font-medium">
+                        <div className="flex justify-between items-baseline gap-3 mb-2.5">
+                          <span
+                            className={`font-medium truncate ${
+                              isOver ? "text-rose-900" : "text-stone-700"
+                            }`}
+                          >
                             {item.category_name}
                           </span>
                           <span
-                            className={`text-sm font-medium tabular-nums ${
-                              isOver ? "text-rose-500" : "text-stone-500"
+                            className={`text-sm font-semibold shrink-0 tabular-nums ${
+                              isOver ? "text-rose-600" : "text-stone-700"
                             }`}
                           >
-                            {currency}
-                            {spent.toLocaleString()} /{" "}
-                            {limit > 0
-                              ? `${currency}${limit.toLocaleString()}`
-                              : "—"}
+                            {money(spent)}
+                            <span
+                              className={`font-normal ${
+                                isOver ? "text-rose-300" : "text-stone-400"
+                              }`}
+                            >
+                              {limit > 0 ? ` / ${money(limit)}` : ""}
+                            </span>
                           </span>
                         </div>
 
-                        <div className="w-full bg-stone-100 rounded-full h-2">
+                        <div
+                          className={`w-full rounded-full h-2 overflow-hidden ${
+                            isOver ? "bg-rose-100" : "bg-stone-100"
+                          }`}
+                        >
                           <div
                             className={`h-2 rounded-full transition-all ${
                               isOver ? "bg-rose-500" : "bg-amber-500"
@@ -157,11 +243,21 @@ export default function StatsPage() {
                           />
                         </div>
 
-                        {limit === 0 && (
-                          <p className="text-xs text-stone-400 mt-2">
-                            No limit set
-                          </p>
-                        )}
+                        {/* "600 of 600" makes you do the subtraction; the number
+                            you actually want is what is left. */}
+                        <p
+                          className={`text-xs mt-2 ${
+                            isOver ? "text-rose-500" : "text-stone-400"
+                          }`}
+                        >
+                          {limit === 0
+                            ? "No limit set"
+                            : left > 0
+                              ? `${money(left)} left`
+                              : left === 0
+                                ? "Limit reached"
+                                : `${money(-left)} over the limit`}
+                        </p>
                       </div>
                     );
                   })}
