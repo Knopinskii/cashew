@@ -12,7 +12,7 @@ class IncomeCategorySerializer(serializers.ModelSerializer):
 class ExpenseCategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = ExpenseCategory
-        fields = ['id','name','monthly_limit']
+        fields = ['id','name','monthly_limit','category_type']
 
    
 

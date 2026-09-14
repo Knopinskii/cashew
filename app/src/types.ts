@@ -9,10 +9,42 @@ export interface IncomeCategory {
   name: string;
 }
 
+export type CategoryType = "stable" | "floating";
+
 export interface ExpenseCategory {
   id: string;
   name: string;
   monthly_limit: string | null;
+  category_type: CategoryType;
+}
+
+export interface ReportCategory {
+  id: string;
+  name: string;
+  category_type: CategoryType;
+  spent: number;
+  previous: number;
+  previous_full_month: number;
+  average: number | null;
+}
+
+export interface Report {
+  period: {
+    month: number;
+    year: number;
+    cutoff_day: number;
+    days_in_month: number;
+    partial: boolean;
+  };
+  totals: {
+    spent: number;
+    previous: number;
+    average: number | null;
+    daily_average: number;
+    projected: number;
+    compared_months: number;
+  };
+  categories: ReportCategory[];
 }
 
 export interface Income {

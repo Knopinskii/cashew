@@ -2,6 +2,7 @@ import type {
   Transaction,
   ExpenseCategory,
   CreateExpenseRequest,
+  CategoryType,
 } from "../../types";
 import { apiRequest } from "./apiClient";
 
@@ -49,12 +50,13 @@ export async function getExpenseCategories() {
 
 export async function createExpenseCategory(
   name: string,
-  monthly_limit?: string
+  monthly_limit?: string,
+  category_type: CategoryType = "floating"
 ) {
   return apiRequest<ExpenseCategory>({
     url: "/api/finance/expense-categories/",
     method: "POST",
-    data: { name, monthly_limit },
+    data: { name, monthly_limit, category_type },
   });
 }
 
@@ -73,5 +75,16 @@ export async function updateExpenseCategory(
     url: `/api/finance/expense-categories/${id}/`,
     method: "PATCH",
     data: { monthly_limit },
+  });
+}
+
+export async function updateExpenseCategoryType(
+  id: string,
+  category_type: CategoryType
+) {
+  return apiRequest<ExpenseCategory>({
+    url: `/api/finance/expense-categories/${id}/`,
+    method: "PATCH",
+    data: { category_type },
   });
 }

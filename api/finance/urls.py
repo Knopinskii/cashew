@@ -15,4 +15,5 @@ router.register('wallets', views.WalletViewSet)
 urlpatterns = [
     path('', include(router.urls)),
     path('stats/', views.StatsView.as_view()),
+    path('report/', views.ReportView.as_view()),
 ]
