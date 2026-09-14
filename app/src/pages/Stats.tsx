@@ -9,18 +9,31 @@ export default function StatsPage() {
   const [stats, setStats] = useState<Stats[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const [error, setError] = useState<string | null>(null);
+
   const wallets = useWalletStore((s) => s.wallets);
   const activeWallet = useWalletStore((s) => s.activeWallet);
+  const month = useWalletStore((s) => s.month);
+  const year = useWalletStore((s) => s.year);
   const activeWalletObj = wallets.find((w) => w.id === activeWallet);
 
   useEffect(() => {
+    if (!activeWallet) return;
+
     async function load() {
-      const data = await getStats();
-      setStats(data);
-      setLoading(false);
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await getStats(activeWallet, month, year);
+        setStats(data);
+      } catch {
+        setError("Failed to load plan");
+      } finally {
+        setLoading(false);
+      }
     }
-    load();
-  }, []);
+    void load();
+  }, [activeWallet, month, year]);
 
   return (
     <div className="min-h-screen bg-stone-50">
@@ -38,6 +51,8 @@ export default function StatsPage() {
           <div className="flex justify-center py-20">
             <div className="w-8 h-8 border-4 border-stone-300 border-t-transparent rounded-full animate-spin" />
           </div>
+        ) : error ? (
+          <p className="text-rose-500 text-sm text-center py-12">{error}</p>
         ) : stats.length === 0 ? (
           <p className="text-stone-400 text-sm text-center py-12">
             No expense categories yet

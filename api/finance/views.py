@@ -78,14 +78,19 @@ class WalletViewSet(BaseViewSet):
 class StatsView(APIView):
     def get(self, request):
         now = timezone.now()
+        month = request.query_params.get('month') or now.month
+        year = request.query_params.get('year') or now.year
+        wallet_id = request.query_params.get('wallet_id')
+
+        spent_filter = Q(
+            transaction__date__month=month,
+            transaction__date__year=year,
+        )
+        if wallet_id:
+            spent_filter &= Q(transaction__wallet_id=wallet_id)
+
         categories = ExpenseCategory.objects.filter(user=request.user).annotate(
-            spent=Sum(
-                'transaction__amount',
-                filter=Q(
-                    transaction__date__month=now.month,
-                    transaction__date__year=now.year,
-                )
-            )
+            spent=Sum('transaction__amount', filter=spent_filter)
         )
 
         data = []

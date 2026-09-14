@@ -20,6 +20,7 @@ export default function Dashboard() {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<UnifiedTransaction | undefined>();
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const wallets = useWalletStore((s) => s.wallets);
   const activeWallet = useWalletStore((s) => s.activeWallet);
@@ -32,13 +33,19 @@ export default function Dashboard() {
   async function loadData() {
     if (!activeWallet) return;
     setLoading(true);
-    const [inc, exp] = await Promise.all([
-      getIncomes(activeWallet, month, year),
-      getExpenses(activeWallet, month, year),
-    ]);
-    setIncomes(inc);
-    setExpenses(exp);
-    setLoading(false);
+    setError(null);
+    try {
+      const [inc, exp] = await Promise.all([
+        getIncomes(activeWallet, month, year),
+        getExpenses(activeWallet, month, year),
+      ]);
+      setIncomes(inc);
+      setExpenses(exp);
+    } catch {
+      setError("Failed to load transactions");
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => {
@@ -96,6 +103,8 @@ export default function Dashboard() {
           <div className="flex justify-center py-20">
             <div className="w-8 h-8 border-4 border-stone-300 border-t-transparent rounded-full animate-spin" />
           </div>
+        ) : error ? (
+          <p className="text-rose-500 text-sm text-center py-12">{error}</p>
         ) : (
           <>
             <SummaryCards
