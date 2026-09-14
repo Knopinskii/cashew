@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "./ui";
 import { getWallets } from "../services/api/wallet.api";
 import { useWalletStore } from "../store/useWalletStore";
+import { clearTokens } from "../services/api/tokens";
 
 const navItems = [
   { label: "Transactions", short: "List", path: "/dashboard" },
@@ -48,7 +49,7 @@ export default function Navbar() {
   }, []);
 
   function handleLogout() {
-    localStorage.removeItem("token");
+    clearTokens();
     navigate("/login");
   }
 

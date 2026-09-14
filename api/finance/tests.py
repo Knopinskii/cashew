@@ -2,6 +2,7 @@ import calendar
 from datetime import date
 from decimal import Decimal
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from rest_framework.test import APIClient
@@ -154,4 +155,47 @@ class ReportViewTests(TestCase):
     def test_anonymous_access_is_denied(self):
         self.assertEqual(
             APIClient().get("/api/finance/report/").status_code, 401
+        )
+
+
+class RefreshTokenTests(TestCase):
+    """The frontend renews access tokens in the background; if this flow breaks
+    the symptom is everyone being signed out, which is worth a test."""
+
+    def setUp(self):
+        self.password = "not-a-real-password"
+        self.user = User.objects.create_user(
+            username="renewer", email="renewer@example.com", password=self.password
+        )
+        self.client = APIClient()
+
+    def test_refresh_returns_a_working_access_token(self):
+        pair = self.client.post(
+            "/api/auth/jwt/create/",
+            {"email": self.user.email, "password": self.password},
+        ).json()
+        self.assertIn("refresh", pair, "login must hand back a refresh token")
+
+        refreshed = self.client.post(
+            "/api/auth/jwt/refresh/", {"refresh": pair["refresh"]}
+        )
+        self.assertEqual(refreshed.status_code, 200)
+        access = refreshed.json()["access"]
+        self.assertNotEqual(access, pair["access"])
+
+        self.client.credentials(HTTP_AUTHORIZATION=f"JWT {access}")
+        self.assertEqual(self.client.get("/api/finance/report/").status_code, 200)
+
+    def test_a_junk_refresh_token_is_rejected(self):
+        response = self.client.post(
+            "/api/auth/jwt/refresh/", {"refresh": "not.a.token"}
+        )
+        self.assertEqual(response.status_code, 401)
+
+    def test_refresh_outlives_access(self):
+        # The whole point of the pair: access is short lived, refresh carries
+        # the session. Equal lifetimes would sign the user out on schedule.
+        self.assertGreater(
+            settings.SIMPLE_JWT["REFRESH_TOKEN_LIFETIME"],
+            settings.SIMPLE_JWT["ACCESS_TOKEN_LIFETIME"],
         )
