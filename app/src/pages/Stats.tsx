@@ -1,12 +1,15 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { getStats } from "../services/api/stats.api";
 import { getCurrencySymbol } from "../utils/currency";
 import { useWalletStore } from "../store/useWalletStore";
 import PeriodSwitcher from "../components/PeriodSwitcher";
+import { ErrorState, EmptyState, PlanSkeleton } from "../components/StateViews";
 import type { Stats } from "../types";
 
 export default function StatsPage() {
+  const navigate = useNavigate();
   const [stats, setStats] = useState<Stats[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -18,27 +21,24 @@ export default function StatsPage() {
   const year = useWalletStore((s) => s.year);
   const activeWalletObj = wallets.find((w) => w.id === activeWallet);
 
-  useEffect(() => {
-    // Narrowed into a local, and load is an arrow function rather than a
-    // declaration: TypeScript will not carry a null check into a hoisted
-    // function, since that function could be called before the check runs.
-    const walletId = activeWallet;
-    if (!walletId) return;
-
-    const load = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const data = await getStats(walletId, month, year);
-        setStats(data);
-      } catch {
-        setError("Failed to load plan");
-      } finally {
-        setLoading(false);
-      }
-    };
-    void load();
+  // useCallback so the retry button and the effect share one loader.
+  const load = useCallback(async () => {
+    if (!activeWallet) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await getStats(activeWallet, month, year);
+      setStats(data);
+    } catch {
+      setError("Failed to load plan");
+    } finally {
+      setLoading(false);
+    }
   }, [activeWallet, month, year]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
 
   return (
     <div className="min-h-screen bg-stone-50">
@@ -55,15 +55,16 @@ export default function StatsPage() {
         <PeriodSwitcher />
 
         {loading ? (
-          <div className="flex justify-center py-20">
-            <div className="w-8 h-8 border-4 border-stone-300 border-t-transparent rounded-full animate-spin" />
-          </div>
+          <PlanSkeleton />
         ) : error ? (
-          <p className="text-rose-500 text-sm text-center py-12">{error}</p>
+          <ErrorState message={error} onRetry={load} />
         ) : stats.length === 0 ? (
-          <p className="text-stone-400 text-sm text-center py-12">
-            No expense categories yet
-          </p>
+          <EmptyState
+            title="No expense categories yet"
+            hint="Categories with a monthly limit show up here as progress bars."
+            actionLabel="Create one in Settings"
+            onAction={() => navigate("/settings")}
+          />
         ) : (
           <div className="space-y-4">
             {stats.map((item) => {

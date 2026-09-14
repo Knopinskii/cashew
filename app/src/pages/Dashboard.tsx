@@ -9,6 +9,12 @@ import { getIncomes, deleteIncome } from "../services/api/income.api";
 import { getExpenses, deleteExpense } from "../services/api/expense.api";
 import { useWalletStore } from "../store/useWalletStore";
 import PeriodSwitcher from "../components/PeriodSwitcher";
+import {
+  ErrorState,
+  EmptyState,
+  SummaryCardsSkeleton,
+  TransactionListSkeleton,
+} from "../components/StateViews";
 
 export default function Dashboard() {
   const [incomes, setIncomes] = useState<Income[]>([]);
@@ -72,11 +78,12 @@ export default function Dashboard() {
         <PeriodSwitcher />
 
         {loading ? (
-          <div className="flex justify-center py-20">
-            <div className="w-8 h-8 border-4 border-stone-300 border-t-transparent rounded-full animate-spin" />
-          </div>
+          <>
+            <SummaryCardsSkeleton />
+            <TransactionListSkeleton />
+          </>
         ) : error ? (
-          <p className="text-rose-500 text-sm text-center py-12">{error}</p>
+          <ErrorState message={error} onRetry={loadData} />
         ) : (
           <>
             <SummaryCards
@@ -84,15 +91,27 @@ export default function Dashboard() {
               expenses={expenses}
               currency={activeWalletObj?.currency ?? "EUR"}
             />
-            <TransactionList
-              incomes={incomes}
-              expenses={expenses}
-              currency={activeWalletObj?.currency ?? "EUR"}
-              onEdit={(t) => {
-                setEditing(t);
-                setOpen(true);
-              }}
-            />
+            {incomes.length === 0 && expenses.length === 0 ? (
+              <EmptyState
+                title="Nothing recorded this month"
+                hint="Add an expense or income to see it here."
+                actionLabel="Add the first one"
+                onAction={() => {
+                  setEditing(undefined);
+                  setOpen(true);
+                }}
+              />
+            ) : (
+              <TransactionList
+                incomes={incomes}
+                expenses={expenses}
+                currency={activeWalletObj?.currency ?? "EUR"}
+                onEdit={(t) => {
+                  setEditing(t);
+                  setOpen(true);
+                }}
+              />
+            )}
           </>
         )}
       </div>
