@@ -18,20 +18,24 @@ export default function StatsPage() {
   const activeWalletObj = wallets.find((w) => w.id === activeWallet);
 
   useEffect(() => {
-    if (!activeWallet) return;
+    // Narrowed into a local, and load is an arrow function rather than a
+    // declaration: TypeScript will not carry a null check into a hoisted
+    // function, since that function could be called before the check runs.
+    const walletId = activeWallet;
+    if (!walletId) return;
 
-    async function load() {
+    const load = async () => {
       setLoading(true);
       setError(null);
       try {
-        const data = await getStats(activeWallet, month, year);
+        const data = await getStats(walletId, month, year);
         setStats(data);
       } catch {
         setError("Failed to load plan");
       } finally {
         setLoading(false);
       }
-    }
+    };
     void load();
   }, [activeWallet, month, year]);
 
@@ -60,8 +64,8 @@ export default function StatsPage() {
         ) : (
           <div className="space-y-4">
             {stats.map((item) => {
-              const spent = parseFloat(item.spent) || 0;
-              const limit = parseFloat(item.monthly_limit) || 0;
+              const spent = item.spent ?? 0;
+              const limit = item.monthly_limit ?? 0;
               const percent = limit > 0 ? Math.min((spent / limit) * 100, 100) : 0;
               const isOver = spent > limit && limit > 0;
               const currency = getCurrencySymbol(activeWalletObj?.currency ?? "");
