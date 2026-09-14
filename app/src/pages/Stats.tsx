@@ -45,16 +45,31 @@ export default function StatsPage() {
   const fixed = stats.filter((s) => s.category_type === "stable");
   const varying = stats.filter((s) => s.category_type !== "stable");
 
-  const withLimit = stats.filter((item) => (item.monthly_limit ?? 0) > 0);
-  const totalLimit = withLimit.reduce(
+  // A fixed cost with no limit set still counts as covered once it is paid,
+  // so it does not drag the expected total down to nothing.
+  const expectedOf = (item: Stats) =>
+    (item.monthly_limit ?? 0) > 0 ? (item.monthly_limit ?? 0) : (item.spent ?? 0);
+
+  const fixedSpent = fixed.reduce((sum, i) => sum + (i.spent ?? 0), 0);
+  const fixedExpected = fixed.reduce((sum, i) => sum + expectedOf(i), 0);
+  const fixedPaid = fixed.filter((i) => (i.spent ?? 0) > 0).length;
+
+  // Only categories with a limit can be measured against one.
+  const varyingWithLimit = varying.filter((i) => (i.monthly_limit ?? 0) > 0);
+  const varyingSpent = varyingWithLimit.reduce((sum, i) => sum + (i.spent ?? 0), 0);
+  const varyingLimit = varyingWithLimit.reduce(
     (sum, i) => sum + (i.monthly_limit ?? 0),
     0,
   );
-  const totalSpent = withLimit.reduce((sum, i) => sum + (i.spent ?? 0), 0);
-  const overallPercent = totalLimit > 0 ? (totalSpent / totalLimit) * 100 : 0;
-  const overCount = withLimit.filter(
+  const varyingPercent =
+    varyingLimit > 0 ? (varyingSpent / varyingLimit) * 100 : 0;
+  const varyingOver = varyingWithLimit.filter(
     (i) => (i.spent ?? 0) >= (i.monthly_limit ?? 0),
   ).length;
+
+  const totalSpent = fixedSpent + varyingSpent;
+  const totalExpected = fixedExpected + varyingLimit;
+  const hasSummary = fixed.length > 0 || varyingWithLimit.length > 0;
 
   const money = (value: number) =>
     formatMoney(value, activeWalletObj?.currency ?? "");
@@ -81,46 +96,95 @@ export default function StatsPage() {
           />
         ) : (
           <>
-            {totalLimit > 0 && (
-              <div className="bg-white rounded-2xl shadow-sm p-5 space-y-3">
-                <div className="flex items-baseline justify-between gap-3">
-                  <div>
-                    <p className="text-xs font-medium text-stone-400 uppercase tracking-wide">
-                      Spent of budget
-                    </p>
-                    <p className="text-2xl font-semibold text-stone-900 tabular-nums">
-                      {money(totalSpent)}
-                      <span className="text-base font-normal text-stone-400">
-                        {" / "}
-                        {money(totalLimit)}
+            {hasSummary && (
+              <div className="bg-white rounded-2xl shadow-sm p-5 space-y-4">
+                {fixed.length > 0 && (
+                  <div className="flex items-baseline justify-between gap-3">
+                    <span className="text-xs font-medium text-stone-400 uppercase tracking-wide">
+                      Fixed
+                    </span>
+                    <span className="flex items-baseline gap-3">
+                      {/* A count, not a bar: for an obligation the question is
+                          whether it is settled, not how full it is. */}
+                      <span
+                        className={`text-xs font-medium ${
+                          fixedPaid === fixed.length
+                            ? "text-emerald-600"
+                            : "text-stone-400"
+                        }`}
+                      >
+                        {fixedPaid}/{fixed.length} paid
                       </span>
-                    </p>
+                      <span className="text-sm text-stone-700 tabular-nums">
+                        {money(fixedSpent)}
+                        <span className="text-stone-400">
+                          {" / "}
+                          {money(fixedExpected)}
+                        </span>
+                      </span>
+                    </span>
                   </div>
-                  <span
-                    className={`text-sm font-semibold tabular-nums ${
-                      overallPercent >= 100 ? "text-rose-500" : "text-stone-500"
-                    }`}
-                  >
-                    {Math.round(overallPercent)}%
+                )}
+
+                {varyingWithLimit.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="flex items-baseline justify-between gap-3">
+                      <span className="text-xs font-medium text-stone-400 uppercase tracking-wide">
+                        Varies
+                      </span>
+                      <span className="flex items-baseline gap-3">
+                        <span
+                          className={`text-xs font-semibold tabular-nums ${
+                            varyingPercent >= 100
+                              ? "text-rose-500"
+                              : "text-stone-500"
+                          }`}
+                        >
+                          {Math.round(varyingPercent)}%
+                        </span>
+                        <span className="text-sm text-stone-700 tabular-nums">
+                          {money(varyingSpent)}
+                          <span className="text-stone-400">
+                            {" / "}
+                            {money(varyingLimit)}
+                          </span>
+                        </span>
+                      </span>
+                    </div>
+
+                    {/* The only bar on the card. This is the part the month can
+                        still be steered by; everything else is already decided. */}
+                    <div className="w-full bg-stone-100 rounded-full h-2 overflow-hidden">
+                      <div
+                        className={`h-2 rounded-full transition-all ${
+                          varyingPercent >= 100 ? "bg-rose-500" : "bg-amber-500"
+                        }`}
+                        style={{ width: `${Math.min(varyingPercent, 100)}%` }}
+                      />
+                    </div>
+
+                    {varyingOver > 0 && (
+                      <p className="text-xs text-rose-500">
+                        {varyingOver}{" "}
+                        {varyingOver === 1 ? "category is" : "categories are"} at
+                        or over the limit
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                <div className="flex items-baseline justify-between gap-3 pt-3 border-t border-stone-100">
+                  <span className="text-xs font-medium text-stone-400 uppercase tracking-wide">
+                    Total
+                  </span>
+                  <span className="text-base font-semibold text-stone-900 tabular-nums">
+                    {money(totalSpent)}
+                    <span className="text-sm font-normal text-stone-400">
+                      {" / "}
+                      {money(totalExpected)}
+                    </span>
                   </span>
                 </div>
-
-                <div className="w-full bg-stone-100 rounded-full h-2 overflow-hidden">
-                  <div
-                    className={`h-2 rounded-full transition-all ${
-                      overallPercent >= 100 ? "bg-rose-500" : "bg-amber-500"
-                    }`}
-                    style={{ width: `${Math.min(overallPercent, 100)}%` }}
-                  />
-                </div>
-
-                {overCount > 0 && (
-                  <p className="text-xs text-rose-500">
-                    {overCount}{" "}
-                    {overCount === 1 ? "category is" : "categories are"} at or
-                    over the limit
-                  </p>
-                )}
               </div>
             )}
 
