@@ -52,7 +52,12 @@ export default function StatsPage() {
 
   const fixedSpent = fixed.reduce((sum, i) => sum + (i.spent ?? 0), 0);
   const fixedExpected = fixed.reduce((sum, i) => sum + expectedOf(i), 0);
-  const fixedPaid = fixed.filter((i) => (i.spent ?? 0) > 0).length;
+  // Settled means the usual amount is actually covered. Counting any single
+  // transaction as paid called ₽444 of a ₽920 rent "paid" and left the total
+  // contradicting the count.
+  const fixedPaid = fixed.filter(
+    (i) => (i.spent ?? 0) > 0 && (i.spent ?? 0) >= expectedOf(i),
+  ).length;
 
   // Only categories with a limit can be measured against one.
   const varyingWithLimit = varying.filter((i) => (i.monthly_limit ?? 0) > 0);
@@ -97,87 +102,97 @@ export default function StatsPage() {
         ) : (
           <>
             {hasSummary && (
-              <div className="bg-white rounded-2xl shadow-sm p-5 space-y-4">
-                {fixed.length > 0 && (
-                  <div className="flex items-baseline justify-between gap-3">
-                    <span className="text-xs font-medium text-stone-400 uppercase tracking-wide">
-                      Fixed
-                    </span>
-                    <span className="flex items-baseline gap-3">
-                      {/* A count, not a bar: for an obligation the question is
-                          whether it is settled, not how full it is. */}
-                      <span
-                        className={`text-xs font-medium ${
-                          fixedPaid === fixed.length
-                            ? "text-emerald-600"
-                            : "text-stone-400"
-                        }`}
-                      >
-                        {fixedPaid}/{fixed.length} paid
-                      </span>
-                      <span className="text-sm text-stone-700 tabular-nums">
-                        {money(fixedSpent)}
-                        <span className="text-stone-400">
-                          {" / "}
-                          {money(fixedExpected)}
-                        </span>
-                      </span>
-                    </span>
-                  </div>
-                )}
-
-                {varyingWithLimit.length > 0 && (
-                  <div className="space-y-2">
+              /* One numeric scale for the whole card: values at 14px semibold in
+                 stone-900, the "of what" half at 14px normal in stone-400,
+                 labels at 12px, and a single 20px figure for the total. Every
+                 number is tabular so columns hold still as values change. Five
+                 sizes and three colours competing on one surface is what made
+                 the card look assembled from parts. */
+              <div className="bg-white rounded-2xl shadow-sm p-5">
+                <div className="space-y-3">
+                  {fixed.length > 0 && (
                     <div className="flex items-baseline justify-between gap-3">
                       <span className="text-xs font-medium text-stone-400 uppercase tracking-wide">
-                        Varies
+                        Fixed
                       </span>
                       <span className="flex items-baseline gap-3">
+                        {/* A count, not a bar: for an obligation the question is
+                            whether it is settled, not how full it is. */}
                         <span
-                          className={`text-xs font-semibold tabular-nums ${
-                            varyingPercent >= 100
-                              ? "text-rose-500"
-                              : "text-stone-500"
+                          className={`text-xs font-medium tabular-nums ${
+                            fixedPaid === fixed.length
+                              ? "text-emerald-600"
+                              : "text-stone-400"
                           }`}
                         >
-                          {Math.round(varyingPercent)}%
+                          {fixedPaid}/{fixed.length} paid
                         </span>
-                        <span className="text-sm text-stone-700 tabular-nums">
-                          {money(varyingSpent)}
-                          <span className="text-stone-400">
+                        <span className="text-sm font-semibold text-stone-900 tabular-nums">
+                          {money(fixedSpent)}
+                          <span className="font-normal text-stone-400">
                             {" / "}
-                            {money(varyingLimit)}
+                            {money(fixedExpected)}
                           </span>
                         </span>
                       </span>
                     </div>
+                  )}
 
-                    {/* The only bar on the card. This is the part the month can
-                        still be steered by; everything else is already decided. */}
-                    <div className="w-full bg-stone-100 rounded-full h-2 overflow-hidden">
-                      <div
-                        className={`h-2 rounded-full transition-all ${
-                          varyingPercent >= 100 ? "bg-rose-500" : "bg-amber-500"
-                        }`}
-                        style={{ width: `${Math.min(varyingPercent, 100)}%` }}
-                      />
+                  {varyingWithLimit.length > 0 && (
+                    <div className="space-y-2">
+                      <div className="flex items-baseline justify-between gap-3">
+                        <span className="text-xs font-medium text-stone-400 uppercase tracking-wide">
+                          Varies
+                        </span>
+                        <span className="flex items-baseline gap-3">
+                          <span
+                            className={`text-xs font-medium tabular-nums ${
+                              varyingPercent >= 100
+                                ? "text-rose-500"
+                                : "text-stone-400"
+                            }`}
+                          >
+                            {Math.round(varyingPercent)}%
+                          </span>
+                          <span className="text-sm font-semibold text-stone-900 tabular-nums">
+                            {money(varyingSpent)}
+                            <span className="font-normal text-stone-400">
+                              {" / "}
+                              {money(varyingLimit)}
+                            </span>
+                          </span>
+                        </span>
+                      </div>
+
+                      {/* The only bar on the card: the part the month can still
+                          be steered by. Everything else is already decided. */}
+                      <div className="w-full bg-stone-100 rounded-full h-1.5 overflow-hidden">
+                        <div
+                          className={`h-1.5 rounded-full transition-all ${
+                            varyingPercent >= 100
+                              ? "bg-rose-500"
+                              : "bg-amber-500"
+                          }`}
+                          style={{ width: `${Math.min(varyingPercent, 100)}%` }}
+                        />
+                      </div>
+
+                      {varyingOver > 0 && (
+                        <p className="text-xs text-rose-500">
+                          {varyingOver}{" "}
+                          {varyingOver === 1 ? "category is" : "categories are"}{" "}
+                          at or over the limit
+                        </p>
+                      )}
                     </div>
+                  )}
+                </div>
 
-                    {varyingOver > 0 && (
-                      <p className="text-xs text-rose-500">
-                        {varyingOver}{" "}
-                        {varyingOver === 1 ? "category is" : "categories are"} at
-                        or over the limit
-                      </p>
-                    )}
-                  </div>
-                )}
-
-                <div className="flex items-baseline justify-between gap-3 pt-3 border-t border-stone-100">
+                <div className="flex items-baseline justify-between gap-3 mt-4 pt-4 border-t border-stone-100">
                   <span className="text-xs font-medium text-stone-400 uppercase tracking-wide">
                     Total
                   </span>
-                  <span className="text-base font-semibold text-stone-900 tabular-nums">
+                  <span className="text-xl font-semibold text-stone-900 tabular-nums">
                     {money(totalSpent)}
                     <span className="text-sm font-normal text-stone-400">
                       {" / "}
@@ -196,20 +211,23 @@ export default function StatsPage() {
                 <div className="bg-white rounded-2xl shadow-sm overflow-hidden divide-y divide-stone-50">
                   {fixed.map((item) => {
                     const spent = item.spent ?? 0;
-                    const limit = item.monthly_limit ?? 0;
-                    const paid = spent > 0;
+                    const expected = expectedOf(item);
+                    const settled = spent > 0 && spent >= expected;
+                    const partial = spent > 0 && !settled;
                     return (
                       <div
                         key={item.category_name}
                         className={`px-4 py-3.5 flex items-center gap-3 ${
-                          paid ? "bg-emerald-50/60" : ""
+                          settled ? "bg-emerald-50/60" : ""
                         }`}
                       >
                         <span
                           className={`w-6 h-6 shrink-0 rounded-full flex items-center justify-center text-xs ${
-                            paid
+                            settled
                               ? "bg-emerald-500 text-white"
-                              : "border-2 border-dashed border-stone-200 text-transparent"
+                              : partial
+                                ? "border-2 border-amber-400 text-transparent"
+                                : "border-2 border-dashed border-stone-200 text-transparent"
                           }`}
                         >
                           ✓
@@ -217,29 +235,39 @@ export default function StatsPage() {
                         <div className="min-w-0 flex-1">
                           <p
                             className={`text-sm font-medium truncate ${
-                              paid ? "text-emerald-900" : "text-stone-800"
+                              settled ? "text-emerald-900" : "text-stone-800"
                             }`}
                           >
                             {item.category_name}
                           </p>
                           <p
                             className={`text-xs ${
-                              paid ? "text-emerald-600" : "text-stone-400"
+                              settled
+                                ? "text-emerald-600"
+                                : partial
+                                  ? "text-amber-600"
+                                  : "text-stone-400"
                             }`}
                           >
-                            {paid
+                            {settled
                               ? "paid this month"
-                              : limit > 0
-                                ? `not paid yet · usually ${money(limit)}`
-                                : "not paid yet"}
+                              : partial
+                                ? `partly paid · usually ${money(expected)}`
+                                : expected > 0
+                                  ? `not paid yet · usually ${money(expected)}`
+                                  : "not paid yet"}
                           </p>
                         </div>
                         <span
                           className={`text-sm font-semibold shrink-0 tabular-nums ${
-                            paid ? "text-emerald-700" : "text-stone-300"
+                            settled
+                              ? "text-emerald-700"
+                              : partial
+                                ? "text-stone-900"
+                                : "text-stone-300"
                           }`}
                         >
-                          {paid ? money(spent) : "—"}
+                          {spent > 0 ? money(spent) : "—"}
                         </span>
                       </div>
                     );
@@ -272,15 +300,15 @@ export default function StatsPage() {
                       >
                         <div className="flex justify-between items-baseline gap-3 mb-2.5">
                           <span
-                            className={`font-medium truncate ${
-                              isOver ? "text-rose-900" : "text-stone-700"
+                            className={`text-sm font-medium truncate ${
+                              isOver ? "text-rose-900" : "text-stone-800"
                             }`}
                           >
                             {item.category_name}
                           </span>
                           <span
                             className={`text-sm font-semibold shrink-0 tabular-nums ${
-                              isOver ? "text-rose-600" : "text-stone-700"
+                              isOver ? "text-rose-600" : "text-stone-900"
                             }`}
                           >
                             {money(spent)}
