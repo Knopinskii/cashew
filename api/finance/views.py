@@ -108,6 +108,7 @@ class StatsView(APIView):
         for category in categories:
             data.append({
                 'category_name': category.name,
+                'category_type': category.category_type,
                 'monthly_limit': category.monthly_limit,
                 'spent': category.spent or 0,
             })
