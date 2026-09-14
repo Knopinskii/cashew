@@ -113,6 +113,7 @@ export interface Wallet {
 
 export interface Stats {
   category_name: string;
+  category_type: CategoryType;
   // The stats endpoint returns plain numbers, not the strings DRF serializers
   // produce for Decimal fields elsewhere. spent falls back to 0 server-side.
   monthly_limit: number | null;

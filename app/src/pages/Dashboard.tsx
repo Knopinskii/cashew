@@ -31,6 +31,10 @@ export default function Dashboard() {
 
   const activeWalletObj = wallets.find((w) => w.id === activeWallet);
 
+  const now = new Date();
+  const isCurrentMonth =
+    month === now.getMonth() + 1 && year === now.getFullYear();
+
   async function loadData() {
     if (!activeWallet) return;
     setLoading(true);
@@ -94,12 +98,23 @@ export default function Dashboard() {
             {incomes.length === 0 && expenses.length === 0 ? (
               <EmptyState
                 title="Nothing recorded this month"
-                hint="Add an expense or income to see it here."
-                actionLabel="Add the first one"
-                onAction={() => {
-                  setEditing(undefined);
-                  setOpen(true);
-                }}
+                hint={
+                  isCurrentMonth
+                    ? "Add an expense or income to see it here."
+                    : undefined
+                }
+                // The modal dates new records today, so adding one from a past
+                // month would file it under the current one and leave this
+                // screen just as empty. Nothing to offer here.
+                actionLabel={isCurrentMonth ? "Add the first one" : undefined}
+                onAction={
+                  isCurrentMonth
+                    ? () => {
+                        setEditing(undefined);
+                        setOpen(true);
+                      }
+                    : undefined
+                }
               />
             ) : (
               <TransactionList
