@@ -1,1 +1,11 @@
 @import "tailwindcss";
+
+/* Not a Tailwind core utility: without this the class is silently ignored
+   and the native scrollbar shows up under the month strip. */
+@utility scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
