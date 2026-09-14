@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { getStats } from "../services/api/stats.api";
-import { getCurrencySymbol } from "../utils/currency";
+import { formatMoney } from "../utils/currency";
 import { useWalletStore } from "../store/useWalletStore";
 import PeriodSwitcher from "../components/PeriodSwitcher";
 import { ErrorState, EmptyState, PlanSkeleton } from "../components/StateViews";
@@ -44,17 +44,20 @@ export default function StatsPage() {
   // not, and a bar that jumps from empty to full teaches nothing.
   const fixed = stats.filter((s) => s.category_type === "stable");
   const varying = stats.filter((s) => s.category_type !== "stable");
-  const currency = getCurrencySymbol(activeWalletObj?.currency ?? "");
 
   const withLimit = stats.filter((item) => (item.monthly_limit ?? 0) > 0);
-  const totalLimit = withLimit.reduce((sum, i) => sum + (i.monthly_limit ?? 0), 0);
+  const totalLimit = withLimit.reduce(
+    (sum, i) => sum + (i.monthly_limit ?? 0),
+    0,
+  );
   const totalSpent = withLimit.reduce((sum, i) => sum + (i.spent ?? 0), 0);
   const overallPercent = totalLimit > 0 ? (totalSpent / totalLimit) * 100 : 0;
   const overCount = withLimit.filter(
-    (i) => (i.spent ?? 0) >= (i.monthly_limit ?? 0)
+    (i) => (i.spent ?? 0) >= (i.monthly_limit ?? 0),
   ).length;
 
-  const money = (value: number) => `${currency}${value.toLocaleString()}`;
+  const money = (value: number) =>
+    formatMoney(value, activeWalletObj?.currency ?? "");
 
   return (
     <div className="min-h-screen bg-stone-50">

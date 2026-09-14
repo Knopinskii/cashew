@@ -3,7 +3,7 @@ import Navbar from "../components/Navbar";
 import PeriodSwitcher from "../components/PeriodSwitcher";
 import { ErrorState, EmptyState, PlanSkeleton } from "../components/StateViews";
 import { getReport } from "../services/api/report.api";
-import { getCurrencySymbol } from "../utils/currency";
+import { formatMoney } from "../utils/currency";
 import { useWalletStore } from "../store/useWalletStore";
 import type { Report, ReportCategory } from "../types";
 
@@ -38,22 +38,17 @@ function ordinal(day: number) {
   return `${day}${["th", "st", "nd", "rd"][day % 10] ?? "th"}`;
 }
 
-function Money({ value, symbol }: { value: number; symbol: string }) {
-  return (
-    <span className="tabular-nums">
-      {symbol}
-      {value.toFixed(2)}
-    </span>
-  );
+function Money({ value, currency }: { value: number; currency: string }) {
+  return <span className="tabular-nums">{formatMoney(value, currency)}</span>;
 }
 
 function FloatingRow({
   item,
-  symbol,
+  currency,
   total,
 }: {
   item: ReportCategory;
-  symbol: string;
+  currency: string;
   total: number;
 }) {
   const share = total > 0 ? (item.spent / total) * 100 : 0;
@@ -64,7 +59,7 @@ function FloatingRow({
           {item.name}
         </span>
         <span className="text-sm font-semibold text-stone-800 shrink-0">
-          <Money value={item.spent} symbol={symbol} />
+          <Money value={item.spent} currency={currency} />
         </span>
       </div>
       <div className="h-1.5 bg-stone-100 rounded-full overflow-hidden">
@@ -77,12 +72,12 @@ function FloatingRow({
         <span>{share.toFixed(0)}% of spending</span>
         <span className="flex items-center gap-3">
           <span className="flex items-center gap-1">
-            last <Money value={item.previous} symbol={symbol} />
+            last <Money value={item.previous} currency={currency} />
             <Delta current={item.spent} reference={item.previous} />
           </span>
           {item.average !== null && (
             <span className="flex items-center gap-1">
-              avg <Money value={item.average} symbol={symbol} />
+              avg <Money value={item.average} currency={currency} />
             </span>
           )}
         </span>
@@ -91,25 +86,33 @@ function FloatingRow({
   );
 }
 
-function StableRow({ item, symbol }: { item: ReportCategory; symbol: string }) {
+function StableRow({
+  item,
+  currency,
+}: {
+  item: ReportCategory;
+  currency: string;
+}) {
   const paid = item.spent > 0;
   return (
     <div className="px-4 py-3.5 flex items-center justify-between gap-3">
       <div className="min-w-0">
-        <p className="text-sm font-medium text-stone-800 truncate">{item.name}</p>
+        <p className="text-sm font-medium text-stone-800 truncate">
+          {item.name}
+        </p>
         <p className="text-xs text-stone-400">
           {/* The previous amount is only worth showing when there is one. */}
           {paid && item.previous_full_month > 0 ? (
             <>
               paid · last month{" "}
-              <Money value={item.previous_full_month} symbol={symbol} />
+              <Money value={item.previous_full_month} currency={currency} />
             </>
           ) : paid ? (
             "paid"
           ) : item.previous_full_month > 0 ? (
             <>
               not paid yet · usually{" "}
-              <Money value={item.previous_full_month} symbol={symbol} />
+              <Money value={item.previous_full_month} currency={currency} />
             </>
           ) : (
             "not paid yet"
@@ -121,7 +124,7 @@ function StableRow({ item, symbol }: { item: ReportCategory; symbol: string }) {
           paid ? "text-stone-800" : "text-stone-300"
         }`}
       >
-        {paid ? <Money value={item.spent} symbol={symbol} /> : "—"}
+        {paid ? <Money value={item.spent} currency={currency} /> : "—"}
       </span>
     </div>
   );
@@ -137,7 +140,7 @@ export default function ReportPage() {
   const month = useWalletStore((s) => s.month);
   const year = useWalletStore((s) => s.year);
   const activeWalletObj = wallets.find((w) => w.id === activeWallet);
-  const symbol = getCurrencySymbol(activeWalletObj?.currency ?? "");
+  const currency = activeWalletObj?.currency ?? "";
 
   const load = useCallback(async () => {
     if (!activeWallet) return;
@@ -156,8 +159,10 @@ export default function ReportPage() {
     void load();
   }, [load]);
 
-  const floating = report?.categories.filter((c) => c.category_type === "floating") ?? [];
-  const stable = report?.categories.filter((c) => c.category_type === "stable") ?? [];
+  const floating =
+    report?.categories.filter((c) => c.category_type === "floating") ?? [];
+  const stable =
+    report?.categories.filter((c) => c.category_type === "stable") ?? [];
   const floatingTotal = floating.reduce((sum, c) => sum + c.spent, 0);
 
   return (
@@ -189,7 +194,7 @@ export default function ReportPage() {
                       ` · to the ${ordinal(report.period.cutoff_day)}`}
                   </p>
                   <p className="text-2xl font-semibold text-stone-900 tabular-nums">
-                    <Money value={report.totals.spent} symbol={symbol} />
+                    <Money value={report.totals.spent} currency={currency} />
                   </p>
                 </div>
                 <Delta
@@ -202,7 +207,7 @@ export default function ReportPage() {
                 <div>
                   <p className="text-xs text-stone-400">Same days last month</p>
                   <p className="text-stone-700">
-                    <Money value={report.totals.previous} symbol={symbol} />
+                    <Money value={report.totals.previous} currency={currency} />
                   </p>
                 </div>
                 <div>
@@ -214,14 +219,20 @@ export default function ReportPage() {
                     {report.totals.average === null ? (
                       <span className="text-stone-300">no history yet</span>
                     ) : (
-                      <Money value={report.totals.average} symbol={symbol} />
+                      <Money
+                        value={report.totals.average}
+                        currency={currency}
+                      />
                     )}
                   </p>
                 </div>
                 <div>
                   <p className="text-xs text-stone-400">Per day</p>
                   <p className="text-stone-700">
-                    <Money value={report.totals.daily_average} symbol={symbol} />
+                    <Money
+                      value={report.totals.daily_average}
+                      currency={currency}
+                    />
                   </p>
                 </div>
                 <div>
@@ -229,7 +240,10 @@ export default function ReportPage() {
                     {report.period.partial ? "At this pace" : "Month total"}
                   </p>
                   <p className="text-stone-700">
-                    <Money value={report.totals.projected} symbol={symbol} />
+                    <Money
+                      value={report.totals.projected}
+                      currency={currency}
+                    />
                   </p>
                 </div>
               </div>
@@ -242,7 +256,7 @@ export default function ReportPage() {
                 </p>
                 <div className="bg-white rounded-2xl shadow-sm divide-y divide-stone-50">
                   {stable.map((item) => (
-                    <StableRow key={item.id} item={item} symbol={symbol} />
+                    <StableRow key={item.id} item={item} currency={currency} />
                   ))}
                 </div>
               </div>
@@ -258,7 +272,7 @@ export default function ReportPage() {
                     <FloatingRow
                       key={item.id}
                       item={item}
-                      symbol={symbol}
+                      currency={currency}
                       total={floatingTotal}
                     />
                   ))}
