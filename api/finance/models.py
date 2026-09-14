@@ -37,6 +37,7 @@ class Income(BaseModel):
     class Meta:
         verbose_name = "Income"
         verbose_name_plural = "Incomes"
+        ordering = ['-date', '-created_at']
 
     def __str__(self):
         return f"{self.amount} - {self.category}"
@@ -52,6 +53,7 @@ class Transaction(BaseModel):
     class Meta:
         verbose_name = "Transaction"
         verbose_name_plural = "Transactions"
+        ordering = ['-date', '-created_at']
 
     def __str__(self):
         return f"{self.amount} - {self.category}"
