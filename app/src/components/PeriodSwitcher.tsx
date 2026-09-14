@@ -43,7 +43,10 @@ export default function PeriodSwitcher() {
         </button>
       </div>
 
-      <div className="flex items-center gap-3 overflow-x-auto scrollbar-none border-b border-stone-100 flex-1">
+      {/* No baseline rule: it ran under the months but not under the year chip,
+          which sat 5px taller and crossed it. An active pill has nothing to
+          line up with, and matches how the navbar marks the current page. */}
+      <div className="flex items-center gap-1 overflow-x-auto scrollbar-none flex-1">
         {MONTHS.map((m, i) => {
           const isActive = i + 1 === month;
           return (
@@ -51,10 +54,10 @@ export default function PeriodSwitcher() {
               key={m}
               ref={isActive ? activeRef : null}
               onClick={() => setMonth(i + 1)}
-              className={`shrink-0 pb-2 text-sm transition-colors border-b-2 whitespace-nowrap ${
+              className={`shrink-0 px-3 py-1.5 rounded-2xl text-sm transition-colors whitespace-nowrap ${
                 isActive
-                  ? "font-semibold text-stone-800 border-amber-500"
-                  : "font-normal text-stone-400 border-transparent hover:text-stone-600"
+                  ? "font-semibold text-amber-700 bg-amber-50"
+                  : "font-normal text-stone-400 hover:text-stone-700 hover:bg-stone-50"
               }`}
             >
               {m}

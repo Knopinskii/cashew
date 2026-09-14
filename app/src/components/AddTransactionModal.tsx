@@ -34,6 +34,7 @@ export default function AddTransactionModal({
   const [date, setDate] = useState(editing?.date ?? new Date().toISOString().split("T")[0]);
   const [error, setError] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [unlockAmount, setUnlockAmount] = useState(false);
 
   useEffect(() => {
     async function loadData() {
@@ -82,6 +83,25 @@ export default function AddTransactionModal({
 
   const categories = formType === "expense" ? expenseCategories : incomeCategories;
 
+  // A fixed cost has one amount by definition, so typing it every month is
+  // busywork and an invitation to typos. Its limit doubles as the usual figure.
+  const fixedCategory =
+    formType === "expense"
+      ? expenseCategories.find(
+          (c) =>
+            String(c.id) === String(category) &&
+            c.category_type === "stable" &&
+            Number(c.monthly_limit ?? 0) > 0
+        )
+      : undefined;
+  const amountIsFixed = Boolean(fixedCategory) && !unlockAmount;
+
+  useEffect(() => {
+    if (fixedCategory && !unlockAmount) {
+      setAmount(String(fixedCategory.monthly_limit));
+    }
+  }, [fixedCategory, unlockAmount]);
+
   return (
     <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-end justify-center sm:items-center">
       <div className="bg-white rounded-t-3xl sm:rounded-3xl w-full sm:max-w-md p-6 space-y-5 shadow-xl">
@@ -125,13 +145,35 @@ export default function AddTransactionModal({
             </select>
           </div>
           <div className="flex flex-col gap-1.5">
-            <label className={labelClass}>Amount</label>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-stone-400">
+            <label className={labelClass}>
+              Amount
+              {amountIsFixed && (
+                <button
+                  onClick={() => setUnlockAmount(true)}
+                  className="ml-2 normal-case tracking-normal text-amber-600 hover:text-amber-700 transition-colors"
+                >
+                  change
+                </button>
+              )}
+            </label>
+            {amountIsFixed ? (
+              // Read-only rather than absent: seeing what will be saved beats
+              // trusting that it is right. "change" is there because rent does
+              // move — indexation, a month with extra utilities — and a form
+              // that cannot record reality is worse than one that asks.
+              <div className="border border-stone-200 bg-stone-50 rounded-2xl px-3 py-2 text-sm text-stone-500 tabular-nums">
                 {getCurrencySymbol(wallets.find((w) => w.id === wallet)?.currency ?? "")}
-              </span>
-              <input type="number" placeholder="0.00" value={amount} onChange={(e) => setAmount(e.target.value)} className={`${inputClass} pl-7 w-full`} />
-            </div>
+                {amount}
+                <span className="text-xs text-stone-400"> · fixed</span>
+              </div>
+            ) : (
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-stone-400">
+                  {getCurrencySymbol(wallets.find((w) => w.id === wallet)?.currency ?? "")}
+                </span>
+                <input type="number" placeholder="0.00" value={amount} onChange={(e) => setAmount(e.target.value)} className={`${inputClass} pl-7 w-full`} />
+              </div>
+            )}
           </div>
           <div className="flex flex-col gap-1.5">
             <label className={labelClass}>Date</label>
