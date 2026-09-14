@@ -33,6 +33,7 @@ export default function AddTransactionModal({
   const [note, setNote] = useState(editing?.note ?? "");
   const [date, setDate] = useState(editing?.date ?? new Date().toISOString().split("T")[0]);
   const [error, setError] = useState("");
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   useEffect(() => {
     async function loadData() {
@@ -147,10 +148,14 @@ export default function AddTransactionModal({
         <div className="flex gap-2">
           {editing && onDelete && (
             <button
-              onClick={onDelete}
-              className="flex-1 py-3 text-sm font-medium text-rose-500 bg-rose-50 hover:bg-rose-100 rounded-2xl transition-colors"
+              onClick={() => (confirmDelete ? onDelete() : setConfirmDelete(true))}
+              className={`flex-1 py-3 text-sm font-medium rounded-2xl transition-colors ${
+                confirmDelete
+                  ? "text-white bg-rose-500 hover:bg-rose-600"
+                  : "text-rose-500 bg-rose-50 hover:bg-rose-100"
+              }`}
             >
-              Delete
+              {confirmDelete ? "Tap again to delete" : "Delete"}
             </button>
           )}
           <button

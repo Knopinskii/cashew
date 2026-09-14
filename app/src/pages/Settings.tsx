@@ -173,7 +173,7 @@ export default function Settings() {
     <div className="min-h-screen bg-stone-50">
       <Navbar />
 
-      <div className="max-w-2xl mx-auto px-6 py-8 space-y-4">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-6 sm:py-8 pb-28 md:pb-8 space-y-4">
         {/* User Info */}
         <Card>
           <div className="px-5 py-4 flex items-center gap-4">

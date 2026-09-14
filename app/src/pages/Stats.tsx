@@ -3,6 +3,7 @@ import Navbar from "../components/Navbar";
 import { getStats } from "../services/api/stats.api";
 import { getCurrencySymbol } from "../utils/currency";
 import { useWalletStore } from "../store/useWalletStore";
+import PeriodSwitcher from "../components/PeriodSwitcher";
 import type { Stats } from "../types";
 
 export default function StatsPage() {
@@ -43,13 +44,15 @@ export default function StatsPage() {
     <div className="min-h-screen bg-stone-50">
       <Navbar />
 
-      <div className="max-w-2xl mx-auto px-6 py-8 space-y-6">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-6 sm:py-8 pb-28 md:pb-8 space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-xl font-semibold text-stone-800">Plan</h1>
           {activeWalletObj && (
             <span className="text-sm text-stone-400">{activeWalletObj.name} · {activeWalletObj.currency}</span>
           )}
         </div>
+
+        <PeriodSwitcher />
 
         {loading ? (
           <div className="flex justify-center py-20">

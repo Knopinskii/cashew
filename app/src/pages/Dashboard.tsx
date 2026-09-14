@@ -8,11 +8,7 @@ import type { Income, Transaction } from "../types";
 import { getIncomes, deleteIncome } from "../services/api/income.api";
 import { getExpenses, deleteExpense } from "../services/api/expense.api";
 import { useWalletStore } from "../store/useWalletStore";
-
-const MONTHS = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
-];
+import PeriodSwitcher from "../components/PeriodSwitcher";
 
 export default function Dashboard() {
   const [incomes, setIncomes] = useState<Income[]>([]);
@@ -26,7 +22,6 @@ export default function Dashboard() {
   const activeWallet = useWalletStore((s) => s.activeWallet);
   const month = useWalletStore((s) => s.month);
   const year = useWalletStore((s) => s.year);
-  const setMonth = useWalletStore((s) => s.setMonth);
 
   const activeWalletObj = wallets.find((w) => w.id === activeWallet);
 
@@ -73,31 +68,8 @@ export default function Dashboard() {
     <div className="min-h-screen bg-stone-50">
       <Navbar />
 
-      <div className="max-w-2xl mx-auto px-6 py-8 space-y-6">
-        {/* Month switcher */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1 shrink-0 bg-stone-100 rounded-2xl px-3 py-1.5 text-xs font-medium text-stone-500">
-            Period <span className="text-stone-400">›</span>
-          </div>
-          <div className="flex items-center gap-3 overflow-x-auto scrollbar-none border-b border-stone-100 flex-1">
-            {MONTHS.map((m, i) => {
-              const isActive = i + 1 === month;
-              return (
-                <button
-                  key={m}
-                  onClick={() => setMonth(i + 1)}
-                  className={`shrink-0 pb-2 text-sm transition-colors border-b-2 whitespace-nowrap ${
-                    isActive
-                      ? "font-semibold text-stone-800 border-amber-500"
-                      : "font-normal text-stone-400 border-transparent hover:text-stone-600"
-                  }`}
-                >
-                  {m}
-                </button>
-              );
-            })}
-          </div>
-        </div>
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-6 sm:py-8 pb-28 md:pb-8 space-y-6">
+        <PeriodSwitcher />
 
         {loading ? (
           <div className="flex justify-center py-20">
@@ -130,7 +102,7 @@ export default function Dashboard() {
           setEditing(undefined);
           setOpen(true);
         }}
-        className="fixed bottom-8 right-8 w-14 h-14 bg-amber-600 hover:bg-amber-700 text-white rounded-full shadow-lg flex items-center justify-center text-2xl transition-colors"
+        className="fixed bottom-24 md:bottom-8 right-5 md:right-8 z-40 w-14 h-14 bg-amber-600 hover:bg-amber-700 text-white rounded-full shadow-lg flex items-center justify-center text-2xl transition-colors"
       >
         +
       </button>
