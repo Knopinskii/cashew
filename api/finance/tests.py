@@ -1,5 +1,5 @@
 import calendar
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 
 from django.conf import settings
@@ -199,3 +199,147 @@ class RefreshTokenTests(TestCase):
             settings.SIMPLE_JWT["REFRESH_TOKEN_LIFETIME"],
             settings.SIMPLE_JWT["ACCESS_TOKEN_LIFETIME"],
         )
+
+
+class PaginationTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="lister", email="lister@example.com", password="pw"
+        )
+        self.wallet = Wallet.objects.create(user=self.user, name="Main", currency="EUR")
+        self.category = ExpenseCategory.objects.create(user=self.user, name="Food")
+        self.client = APIClient()
+        self.client.force_authenticate(self.user)
+
+    def make_transactions(self, count):
+        Transaction.objects.bulk_create(
+            Transaction(
+                user=self.user,
+                wallet=self.wallet,
+                category=self.category,
+                amount=Decimal("1.00"),
+                date=date(2025, 1, 1) + timedelta(days=index),
+            )
+            for index in range(count)
+        )
+
+    def test_transactions_come_back_in_an_envelope(self):
+        self.make_transactions(3)
+        payload = self.client.get("/api/finance/transactions/").json()
+
+        self.assertEqual(payload["count"], 3)
+        self.assertIsNone(payload["next"])
+        self.assertEqual(len(payload["results"]), 3)
+
+    def test_a_long_list_is_split_and_nothing_is_lost(self):
+        self.make_transactions(60)
+
+        first = self.client.get("/api/finance/transactions/").json()
+        self.assertEqual(first["count"], 60)
+        self.assertEqual(len(first["results"]), 50)
+        self.assertIsNotNone(first["next"], "a second page must be advertised")
+
+        second = self.client.get("/api/finance/transactions/", {"page": 2}).json()
+        self.assertEqual(len(second["results"]), 10)
+        self.assertIsNone(second["next"])
+
+        # The client walks the pages; the two together must be the whole set
+        # with nothing repeated. A page that repeats or drops rows is the exact
+        # failure the ordering on the model exists to prevent.
+        ids = [row["id"] for row in first["results"] + second["results"]]
+        self.assertEqual(len(set(ids)), 60)
+
+    def test_small_collections_are_not_paginated(self):
+        # Wallets and categories are bounded by how people use the app, so they
+        # stay plain lists rather than making every caller unwrap six rows.
+        for url in (
+            "/api/finance/wallets/",
+            "/api/finance/expense-categories/",
+            "/api/finance/income-categories/",
+        ):
+            with self.subTest(url=url):
+                self.assertIsInstance(self.client.get(url).json(), list)
+
+
+class IsolationTests(TestCase):
+    """Two users, one database. These are the failures you learn about from the
+    person they happened to, so they are worth asserting rather than assuming."""
+
+    def setUp(self):
+        self.owner = User.objects.create_user(
+            username="owner", email="owner@example.com", password="pw"
+        )
+        self.stranger = User.objects.create_user(
+            username="stranger", email="stranger@example.com", password="pw"
+        )
+        self.owner_wallet = Wallet.objects.create(
+            user=self.owner, name="Mine", currency="EUR"
+        )
+        self.owner_category = ExpenseCategory.objects.create(
+            user=self.owner, name="Food"
+        )
+        self.stranger_category = ExpenseCategory.objects.create(
+            user=self.stranger, name="Theirs"
+        )
+        self.client = APIClient()
+        self.client.force_authenticate(self.stranger)
+
+    def test_a_stranger_cannot_spend_from_someone_elses_wallet(self):
+        response = self.client.post(
+            "/api/finance/transactions/",
+            {
+                "wallet": str(self.owner_wallet.id),
+                "category": str(self.stranger_category.id),
+                "amount": "10.00",
+                "date": "2025-02-01",
+            },
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(Transaction.objects.filter(wallet=self.owner_wallet).count(), 0)
+
+    def test_a_stranger_cannot_use_someone_elses_category(self):
+        stranger_wallet = Wallet.objects.create(
+            user=self.stranger, name="Theirs", currency="EUR"
+        )
+        response = self.client.post(
+            "/api/finance/transactions/",
+            {
+                "wallet": str(stranger_wallet.id),
+                "category": str(self.owner_category.id),
+                "amount": "10.00",
+                "date": "2025-02-01",
+            },
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(Transaction.objects.count(), 0)
+
+    def test_a_stranger_cannot_read_someone_elses_transactions(self):
+        Transaction.objects.create(
+            user=self.owner,
+            wallet=self.owner_wallet,
+            category=self.owner_category,
+            amount=Decimal("99.00"),
+            date=date(2025, 2, 1),
+        )
+
+        payload = self.client.get("/api/finance/transactions/").json()
+        self.assertEqual(payload["count"], 0)
+
+    def test_a_stranger_cannot_edit_someone_elses_transaction(self):
+        theirs = Transaction.objects.create(
+            user=self.owner,
+            wallet=self.owner_wallet,
+            category=self.owner_category,
+            amount=Decimal("99.00"),
+            date=date(2025, 2, 1),
+        )
+
+        # Not in the stranger's queryset at all, so it may as well not exist.
+        response = self.client.patch(
+            f"/api/finance/transactions/{theirs.id}/", {"amount": "1.00"}
+        )
+        self.assertEqual(response.status_code, 404)
+        theirs.refresh_from_db()
+        self.assertEqual(theirs.amount, Decimal("99.00"))
