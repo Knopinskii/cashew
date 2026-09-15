@@ -25,23 +25,6 @@ def _money(value):
     return float(Decimal(value).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP))
 
 
-class SmallSetViewSet(viewsets.ModelViewSet):
-    """Collections bounded by how people actually use the app.
-
-    Nobody keeps fifty wallets or fifty expense categories, and paging them
-    would only force every caller to unwrap an envelope around six rows.
-    """
-
-    pagination_class = None
-
-    def get_queryset(self):
-        model = self.serializer_class.Meta.model
-        return model.objects.filter(user=self.request.user)
-
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
-
-
 class BaseViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         model = self.serializer_class.Meta.model
@@ -49,6 +32,18 @@ class BaseViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+
+
+class SmallSetViewSet(BaseViewSet):
+    """Collections bounded by how people actually use the app.
+
+    Nobody keeps fifty wallets or fifty expense categories, and paging them
+    would only force every caller to unwrap an envelope around six rows. Only
+    the pagination differs — the per-user filtering is the same rule, and
+    copying it would leave two places to fix when it changes.
+    """
+
+    pagination_class = None
 
 
 class IncomeCategoryViewSet(SmallSetViewSet):
