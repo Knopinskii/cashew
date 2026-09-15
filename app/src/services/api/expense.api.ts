@@ -4,14 +4,14 @@ import type {
   CreateExpenseRequest,
   CategoryType,
 } from "../../types";
-import { apiRequest } from "./apiClient";
+import { apiRequest, apiRequestAll } from "./apiClient";
 
 export async function getExpenses(
   walletId?: string,
   month?: number,
   year?: number
 ) {
-  return apiRequest<Transaction[]>({
+  return apiRequestAll<Transaction>({
     url: "/api/finance/transactions/",
     method: "GET",
     params: { wallet_id: walletId, month, year },

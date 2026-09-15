@@ -34,12 +34,24 @@ class BaseViewSet(viewsets.ModelViewSet):
         serializer.save(user=self.request.user)
 
 
-class IncomeCategoryViewSet(BaseViewSet):
+class SmallSetViewSet(BaseViewSet):
+    """Collections bounded by how people actually use the app.
+
+    Nobody keeps fifty wallets or fifty expense categories, and paging them
+    would only force every caller to unwrap an envelope around six rows. Only
+    the pagination differs — the per-user filtering is the same rule, and
+    copying it would leave two places to fix when it changes.
+    """
+
+    pagination_class = None
+
+
+class IncomeCategoryViewSet(SmallSetViewSet):
     serializer_class = IncomeCategorySerializer
     queryset = IncomeCategory.objects.none()
 
 
-class ExpenseCategoryViewSet(BaseViewSet):
+class ExpenseCategoryViewSet(SmallSetViewSet):
     serializer_class = ExpenseCategorySerializer
     queryset = ExpenseCategory.objects.none()
 
@@ -81,7 +93,7 @@ class TransactionViewSet(BaseViewSet):
         return qs
 
 
-class WalletViewSet(BaseViewSet):
+class WalletViewSet(SmallSetViewSet):
     serializer_class = WalletSerializer
     queryset = Wallet.objects.none()
 

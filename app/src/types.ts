@@ -1,3 +1,11 @@
+/** DRF's page envelope. `next` is a full URL, or null on the last page. */
+export interface Paginated<T> {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: T[];
+}
+
 export interface User {
   id: string;
   email: string;
