@@ -4,5 +4,9 @@ __pycache__/
 *.pyc
 db.sqlite3
 .env
+.env.*
+!.env.example
 app/node_modules/
 app/dist/
+api/staticfiles/
+
