@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   getExpenseCategories,
   createExpense,
@@ -13,6 +14,7 @@ import {
 import type { IncomeCategory, ExpenseCategory } from "../types";
 import type { UnifiedTransaction } from "./TransactionList";
 import { getCurrencySymbol } from "../utils/currency";
+import { describeError } from "../services/api/errors";
 import { useWalletStore } from "../store/useWalletStore";
 
 const selectClass =
@@ -32,6 +34,7 @@ export default function AddTransactionModal({
   onDelete?: () => void;
   editing?: UnifiedTransaction;
 }) {
+  const navigate = useNavigate();
   const wallets = useWalletStore((s) => s.wallets);
   const activeWallet = useWalletStore((s) => s.activeWallet);
 
@@ -55,6 +58,9 @@ export default function AddTransactionModal({
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [unlockAmount, setUnlockAmount] = useState(false);
   const [syncUsualAmount, setSyncUsualAmount] = useState(false);
+  // Remembers what the fixed category filled in, so switching away can clear
+  // that without throwing away a figure the user typed themselves.
+  const [autofilled, setAutofilled] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadData() {
@@ -79,7 +85,14 @@ export default function AddTransactionModal({
   }, [formType, expenseCategories, incomeCategories]);
 
   async function handleSave() {
-    if (!amount || !date || !category || !wallet) return;
+    // Returning quietly made the button look broken: you press Save, nothing
+    // moves, and nothing explains why.
+    if (!wallet) return setError("Create a wallet in Settings first.");
+    if (!category)
+      return setError(`Create an ${formType} category in Settings first.`);
+    if (!amount) return setError("Enter an amount.");
+    if (!date) return setError("Pick a date.");
+
     try {
       if (editing) {
         if (formType === "expense") {
@@ -113,8 +126,8 @@ export default function AddTransactionModal({
       }
       onSave();
       onClose();
-    } catch {
-      setError("Something went wrong. Please try again.");
+    } catch (err) {
+      setError(describeError(err, "Could not save. Please try again."));
     }
   }
 
@@ -144,9 +157,23 @@ export default function AddTransactionModal({
 
   useEffect(() => {
     if (fixedCategory && !unlockAmount) {
-      setAmount(String(fixedCategory.monthly_limit));
+      const usual = String(fixedCategory.monthly_limit);
+      setAmount(usual);
+      setAutofilled(usual);
     }
   }, [fixedCategory, unlockAmount]);
+
+  useEffect(() => {
+    if (editing) return;
+    // Switching expense to income used to keep the amount a fixed expense
+    // category had filled in, so one careless Save recorded a rent payment as
+    // salary. Only the autofilled value is dropped; a typed one survives.
+    setAmount((current) => (current === autofilled ? "" : current));
+    setAutofilled(null);
+    setUnlockAmount(false);
+    setSyncUsualAmount(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formType]);
 
   return (
     <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-end justify-center sm:items-center">
@@ -181,31 +208,50 @@ export default function AddTransactionModal({
         <div className="grid grid-cols-2 gap-3">
           <div className="flex flex-col gap-1.5">
             <label className={labelClass}>Wallet</label>
-            <select
-              value={wallet}
-              onChange={(e) => setWallet(e.target.value)}
-              className={selectClass}
-            >
-              {wallets.map((w) => (
-                <option key={w.id} value={w.id}>
-                  {w.name}
-                </option>
-              ))}
-            </select>
+            {wallets.length === 0 ? (
+              // An empty dropdown offers nothing and explains nothing.
+              <button
+                onClick={() => navigate("/settings")}
+                className={`${selectClass} text-left text-amber-700 bg-amber-50 border-amber-200`}
+              >
+                None yet — create one →
+              </button>
+            ) : (
+              <select
+                value={wallet}
+                onChange={(e) => setWallet(e.target.value)}
+                className={selectClass}
+              >
+                {wallets.map((w) => (
+                  <option key={w.id} value={w.id}>
+                    {w.name}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
           <div className="flex flex-col gap-1.5">
             <label className={labelClass}>Category</label>
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className={selectClass}
-            >
-              {categories.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
+            {categories.length === 0 ? (
+              <button
+                onClick={() => navigate("/settings")}
+                className={`${selectClass} text-left text-amber-700 bg-amber-50 border-amber-200`}
+              >
+                None yet — create one →
+              </button>
+            ) : (
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className={selectClass}
+              >
+                {categories.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
           <div className="flex flex-col gap-1.5">
             <label className={labelClass}>
@@ -282,7 +328,11 @@ export default function AddTransactionModal({
           </div>
         </div>
 
-        {error && <p className="text-xs text-rose-500 text-center">{error}</p>}
+        {error && (
+          <p className="text-xs text-rose-500 text-center whitespace-pre-line">
+            {error}
+          </p>
+        )}
 
         <div className="flex gap-2">
           {editing && onDelete && (
