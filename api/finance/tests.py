@@ -343,3 +343,34 @@ class IsolationTests(TestCase):
         self.assertEqual(response.status_code, 404)
         theirs.refresh_from_db()
         self.assertEqual(theirs.amount, Decimal("99.00"))
+
+
+class DefaultWalletTests(TestCase):
+    def test_a_new_account_gets_a_wallet(self):
+        # Without one there is nowhere to record a transaction, and the way to
+        # fix that is buried in Settings.
+        user = User.objects.create_user(
+            username="newcomer", email="newcomer@example.com", password="pw"
+        )
+
+        wallets = Wallet.objects.filter(user=user)
+        self.assertEqual(wallets.count(), 1)
+        self.assertEqual(wallets.first().name, "Main")
+
+    def test_saving_a_user_again_does_not_add_another(self):
+        user = User.objects.create_user(
+            username="newcomer", email="newcomer@example.com", password="pw"
+        )
+        user.username = "renamed"
+        user.save()
+
+        self.assertEqual(Wallet.objects.filter(user=user).count(), 1)
+
+    def test_categories_are_left_to_the_user(self):
+        # A wallet is unavoidable; a list of categories is an opinion about how
+        # someone spends their money.
+        user = User.objects.create_user(
+            username="newcomer", email="newcomer@example.com", password="pw"
+        )
+
+        self.assertEqual(ExpenseCategory.objects.filter(user=user).count(), 0)

@@ -1,0 +1,27 @@
+services:
+  db:
+    image: postgres:17
+    # These only create the database on first start, when the volume is empty.
+    # Changing them later does nothing until the volume is removed.
+    environment:
+      POSTGRES_DB: cashew
+      POSTGRES_USER: cashew
+      POSTGRES_PASSWORD: cashew
+    ports:
+      # Exposed so Django can reach it from the host while it still runs
+      # outside Docker. Once the api service exists this is only for psql.
+      - "5432:5432"
+    volumes:
+      # Without this the database lives inside the container and the first
+      # `docker compose down` takes it with it.
+      - cashew_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      # Postgres opens its port before it is ready to answer. Something has to
+      # ask it, or whatever depends on it starts too early and falls over.
+      test: ["CMD-SHELL", "pg_isready -U cashew -d cashew"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  cashew_pgdata:
