@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   getExpenseCategories,
@@ -58,9 +58,11 @@ export default function AddTransactionModal({
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [unlockAmount, setUnlockAmount] = useState(false);
   const [syncUsualAmount, setSyncUsualAmount] = useState(false);
-  // Remembers what the fixed category filled in, so switching away can clear
-  // that without throwing away a figure the user typed themselves.
-  const [autofilled, setAutofilled] = useState<string | null>(null);
+  // Remembers what a fixed category filled in, so moving away can clear that
+  // without throwing away a figure the user typed themselves. A ref rather
+  // than state: it is only ever read inside the effect that writes it, and as
+  // state it would have to be a dependency of its own updater.
+  const autofilled = useRef<string | null>(null);
 
   useEffect(() => {
     async function loadData() {
@@ -156,24 +158,40 @@ export default function AddTransactionModal({
       : undefined;
 
   useEffect(() => {
+    // Editing an existing record must never have its amount rewritten: open a
+    // €444 payment against a €920 category and the modal would show 920, then
+    // save it.
+    if (editing) return;
+
     if (fixedCategory && !unlockAmount) {
       const usual = String(fixedCategory.monthly_limit);
       setAmount(usual);
-      setAutofilled(usual);
+      autofilled.current = usual;
+      return;
     }
-  }, [fixedCategory, unlockAmount]);
+
+    // The selection no longer dictates an amount — expense to income, or a
+    // fixed category to a varying one. Whatever the old one filled in has to
+    // go, or rent at 918 is recorded as groceries. Only the autofilled figure
+    // is dropped; a typed one survives.
+    // Read the ref into a local first. setAmount's updater runs later, during
+    // the next render, and by then the line below would already have cleared
+    // the ref — so the comparison would be against null and the stale amount
+    // would survive.
+    const filled = autofilled.current;
+    autofilled.current = null;
+    setAmount((current) => (current === filled ? "" : current));
+  }, [fixedCategory, unlockAmount, editing]);
 
   useEffect(() => {
     if (editing) return;
-    // Switching expense to income used to keep the amount a fixed expense
-    // category had filled in, so one careless Save recorded a rent payment as
-    // salary. Only the autofilled value is dropped; a typed one survives.
-    setAmount((current) => (current === autofilled ? "" : current));
-    setAutofilled(null);
+    // An unlocked amount belongs to the category it was unlocked for. Carrying
+    // the unlock across a change of category would leave the "update the usual
+    // amount" checkbox pointing at a different category than the figure was
+    // typed for, and tick it into writing that figure there.
     setUnlockAmount(false);
     setSyncUsualAmount(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formType]);
+  }, [category, formType, editing]);
 
   return (
     <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-end justify-center sm:items-center">
