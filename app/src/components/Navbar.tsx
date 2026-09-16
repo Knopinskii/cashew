@@ -27,12 +27,24 @@ export default function Navbar() {
   useEffect(() => {
     getWallets().then((data) => {
       setWallets(data);
-      // A brand new account has no wallets yet; data[0] would throw.
-      if (!activeWallet && data.length > 0) {
-        updateActiveWallet(data[0].id);
+
+      // The active wallet is persisted, so it outlives the data it points at:
+      // after the move from SQLite to Postgres the stored id belonged to a
+      // wallet that no longer existed. Nothing noticed, because the old guard
+      // only filled in a missing wallet and never questioned a present one.
+      //
+      // The failure was quiet in the worst way. A <select> whose value matches
+      // none of its options displays the first one, so the form showed a real
+      // wallet while submitting a dead id, and every list was filtered by a
+      // wallet with no rows.
+      //
+      // Read from the store rather than the closure: this effect runs once on
+      // mount, and the captured value would be the one from first render.
+      const active = useWalletStore.getState().activeWallet;
+      if (!data.some((wallet) => String(wallet.id) === String(active))) {
+        updateActiveWallet(data[0]?.id ?? null);
       }
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [setWallets, updateActiveWallet]);
 
   useEffect(() => {
