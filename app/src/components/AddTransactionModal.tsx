@@ -184,6 +184,16 @@ export default function AddTransactionModal({
   }, [fixedCategory, unlockAmount, editing]);
 
   useEffect(() => {
+    // A <select> whose value matches no option renders the first one, so a
+    // stale id shows a plausible wallet and submits a dead one. Keep the two
+    // in step rather than trusting them to agree.
+    if (wallets.length === 0) return;
+    if (!wallets.some((w) => String(w.id) === String(wallet))) {
+      setWallet(String(wallets[0].id));
+    }
+  }, [wallets, wallet]);
+
+  useEffect(() => {
     if (editing) return;
     // An unlocked amount belongs to the category it was unlocked for. Carrying
     // the unlock across a change of category would leave the "update the usual

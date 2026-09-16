@@ -6,7 +6,8 @@ const now = new Date();
 
 interface WalletStore {
   activeWallet: string | null;
-  updateActiveWallet: (id: string) => void;
+  // null when the account has no wallets, or when the stored one is gone.
+  updateActiveWallet: (id: string | null) => void;
   wallets: Wallet[];
   setWallets: (wallets: Wallet[]) => void;
   month: number;
