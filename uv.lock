@@ -23,6 +23,7 @@ dependencies = [
     { name = "djangorestframework" },
     { name = "djangorestframework-simplejwt" },
     { name = "djoser" },
+    { name = "gunicorn" },
     { name = "psycopg", extra = ["binary"] },
     { name = "python-dotenv" },
     { name = "social-auth-app-django" },
@@ -38,6 +39,7 @@ requires-dist = [
     { name = "djangorestframework", specifier = ">=3.17" },
     { name = "djangorestframework-simplejwt", specifier = ">=5.5" },
     { name = "djoser", specifier = ">=2.3" },
+    { name = "gunicorn", specifier = ">=26.2.0" },
     { name = "psycopg", extras = ["binary"], specifier = ">=3.3.5" },
     { name = "python-dotenv", specifier = ">=1.2.2" },
     { name = "social-auth-app-django", specifier = ">=5.7" },
@@ -295,6 +297,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/35/bc/8931752c12ddc987fc0c729e9b675e2f72e37ebd82f7ca31a10f287de045/djoser-2.3.3.tar.gz", hash = "sha256:6ceeea9898cbdd585f1daa1ee9d46270600c0401dcd2d1db6f7894782006f6a6", size = 35032, upload-time = "2025-07-13T14:36:03.38Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/01/b3/f51273281172ff233a8c16df916282d75502dbc6a06b9b5d01ed3039f8ed/djoser-2.3.3-py3-none-any.whl", hash = "sha256:b97d233b626c26ebccb09f5614420873ad78b8b1fb1459c76475b05319bae567", size = 71905, upload-time = "2025-07-13T14:36:02.385Z" },
+]
+
+[[package]]
+name = "gunicorn"
+version = "26.2.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/d9/8a/e4ef6ee11701b6cd64702848415ffb69eeff85cb388a3c6c7fe86f22f3f8/gunicorn-26.2.0.tar.gz", hash = "sha256:62b864895d9ebff0b2f9867ba04fe811c93121596540830c9c916d0769668447", size = 787921, upload-time = "2026-08-24T15:05:59.3Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/fe/85/7522a52e5e2f42faf1a129113ab63e548c42e103e9af395b7bfe65e403e2/gunicorn-26.2.0-py3-none-any.whl", hash = "sha256:bd249d0b3f7972f7432f0a6b6ff3b3ee2d129f70cd1ff6c09a9dd9e29a2b88e3", size = 228389, upload-time = "2026-08-24T15:05:57.67Z" },
 ]
 
 [[package]]
