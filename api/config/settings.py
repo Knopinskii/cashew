@@ -1,7 +1,6 @@
 from pathlib import Path
 from dotenv import load_dotenv
 from django.core.exceptions import ImproperlyConfigured
-import dj_database_url
 import os
 load_dotenv()
 
@@ -96,10 +95,6 @@ CORS_ALLOWED_ORIGINS = env_list(
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
-    # Directly after SecurityMiddleware, as WhiteNoise documents: it serves
-    # static files itself and returns before the rest of the stack runs, so
-    # anything below it would never see those requests anyway.
-    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -132,10 +127,10 @@ WSGI_APPLICATION = "config.wsgi.application"
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
-    "default": dj_database_url.config(
-        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
-        conn_max_age=600,
-    )
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
+    }
 }
 
 
@@ -174,20 +169,6 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = "static/"
-# Where collectstatic gathers every app's static files. Django refuses to
-# serve them itself once DEBUG is off, and running nginx just for the admin
-# stylesheet is more machinery than the job deserves.
-STATIC_ROOT = BASE_DIR / "staticfiles"
-
-STORAGES = {
-    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
-    "staticfiles": {
-        # Compresses, and renames each file with a hash of its contents so it
-        # can be cached forever: a changed file gets a new name rather than
-        # waiting for someone's browser to expire the old one.
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
-    },
-}
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field

@@ -8,5 +8,4 @@ db.sqlite3
 !.env.example
 app/node_modules/
 app/dist/
-api/staticfiles/
 
