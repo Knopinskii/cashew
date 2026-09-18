@@ -1,35 +1,17 @@
 from pathlib import Path
 from dotenv import load_dotenv
-from django.core.exceptions import ImproperlyConfigured
-import dj_database_url
 import os
 load_dotenv()
 
+
+SECRET_KEY = os.getenv("SECRET_KEY")
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-def env_bool(name, default="False"):
-    """Env vars are always strings: bool("False") is True, so compare explicitly."""
-    return os.getenv(name, default).strip().lower() in ("true", "1", "yes", "on")
+DEBUG = True
 
-
-def env_list(name, default=""):
-    """Comma-separated env var to list, ignoring blanks and stray spaces."""
-    return [item.strip() for item in os.getenv(name, default).split(",") if item.strip()]
-
-
-SECRET_KEY = os.getenv("SECRET_KEY")
-if not SECRET_KEY:
-    raise ImproperlyConfigured(
-        "SECRET_KEY is not set. Copy .env.example to .env and fill it in."
-    )
-
-# Default to False: leaving DEBUG on in production leaks the secret key and
-# database credentials on any error page. Dangerous behaviour opts in.
-DEBUG = env_bool("DEBUG")
-
-ALLOWED_HOSTS = env_list("ALLOWED_HOSTS", "localhost,127.0.0.1")
+ALLOWED_HOSTS = []
 
 
 # Application definition
@@ -88,18 +70,14 @@ DJOSER = {
 
 AUTH_USER_MODEL = 'users.User'
 
-CORS_ALLOWED_ORIGINS = env_list(
-    "CORS_ALLOWED_ORIGINS",
-    "http://localhost:5173,http://127.0.0.1:5173",
-)
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
 
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
-    # Directly after SecurityMiddleware, as WhiteNoise documents: it serves
-    # static files itself and returns before the rest of the stack runs, so
-    # anything below it would never see those requests anyway.
-    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -132,10 +110,10 @@ WSGI_APPLICATION = "config.wsgi.application"
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
-    "default": dj_database_url.config(
-        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
-        conn_max_age=600,
-    )
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
+    }
 }
 
 
@@ -174,20 +152,6 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = "static/"
-# Where collectstatic gathers every app's static files. Django refuses to
-# serve them itself once DEBUG is off, and running nginx just for the admin
-# stylesheet is more machinery than the job deserves.
-STATIC_ROOT = BASE_DIR / "staticfiles"
-
-STORAGES = {
-    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
-    "staticfiles": {
-        # Compresses, and renames each file with a hash of its contents so it
-        # can be cached forever: a changed file gets a new name rather than
-        # waiting for someone's browser to expire the old one.
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
-    },
-}
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
