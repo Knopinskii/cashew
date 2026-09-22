@@ -3,6 +3,8 @@ import { Button, Input } from "../components/ui";
 import { useNavigate, Link } from "react-router-dom";
 import { login } from "../services/api/auth.api";
 import { setTokens } from "../services/api/tokens";
+import { describeError } from "../services/api/errors";
+import axios from "axios";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -17,8 +19,14 @@ export default function Login() {
       const response = await login({ email, password });
       setTokens(response.access, response.refresh);
       navigate("/dashboard");
-    } catch {
-      setError("Invalid email or password.");
+    } catch (err) {
+      // Only a 401 means the credentials are wrong. A dead server or a 500
+      // used to show the same message and sent people resetting passwords.
+      if (axios.isAxiosError(err) && err.response?.status === 401) {
+        setError("Invalid email or password.");
+      } else {
+        setError(describeError(err, "Could not sign in. Please try again."));
+      }
     }
   }
 
@@ -42,7 +50,7 @@ export default function Login() {
             onChange={(e) => setPassword(e.target.value)}
             placeholder="••••••••"
           />
-          {error && <p className="text-xs text-rose-500">{error}</p>}
+          {error && <p className="text-xs text-rose-500 whitespace-pre-line">{error}</p>}
           <Button type="submit" className="w-full justify-center">
             Sign in
           </Button>

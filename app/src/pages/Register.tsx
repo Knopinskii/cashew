@@ -2,6 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button, Input } from "../components/ui";
 import { useState } from "react";
 import { register } from "../services/api/auth.api";
+import { describeError } from "../services/api/errors";
 
 export default function Register() {
   const [email, setEmail] = useState("");
@@ -21,8 +22,8 @@ export default function Register() {
     try {
       await register({ email, username, password });
       navigate("/login");
-    } catch {
-      setError("Registration failed. Please try again.");
+    } catch (err) {
+      setError(describeError(err, "Registration failed. Please try again."));
     }
   }
 
@@ -60,7 +61,7 @@ export default function Register() {
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
           />
-          {error && <p className="text-xs text-rose-500">{error}</p>}
+          {error && <p className="text-xs text-rose-500 whitespace-pre-line">{error}</p>}
           <Button type="submit" className="w-full justify-center">
             Sign up
           </Button>
