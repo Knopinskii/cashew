@@ -1,0 +1,20 @@
+services:
+  db:
+    image: postgres:17
+    environment:
+      # Local development only. The server gets real credentials from its own .env.
+      POSTGRES_USER: cashew
+      POSTGRES_PASSWORD: cashew
+      POSTGRES_DB: cashew
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cashew -d cashew"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:
