@@ -72,6 +72,19 @@ Anything else previously listed here (PostHog, Anthropic SDK) is post-MVP — do
 - Wallet switcher in Navbar
 - Month filter on Dashboard (backend supports `wallet_id`, `month`, `year` on incomes/transactions)
 - health + check_auth endpoints
+- Report page — spending vs. same days last month, vs. all-time average, daily pace and projection
+- Categories split into `stable` (fixed, e.g. rent) and `floating` (varies, e.g. groceries) — Plan and Report both read this
+- Mobile layout — bottom tab bar under 768px, PeriodSwitcher with a year stepper
+- Skeleton loading states, retryable error states, non-destructive empty states
+- Two-step delete confirmation
+- Pagination (`PAGE_SIZE: 50`) with small collections (wallets, categories) opted out
+- Isolation tests — a stranger cannot read, edit, or spend from another user's wallet/category
+- Refresh token flow — access token now 1h, refresh 30 days, frontend interceptor renews silently
+- Specific sign-in error messages (wrong password vs. no such account vs. server unreachable)
+- Settings read from the environment (`DEBUG`, `ALLOWED_HOSTS`, `CORS_ALLOWED_ORIGINS`, `SECRET_KEY`, `DATABASE_URL`) — done by Vladimir himself, PR #64
+- Postgres running locally in Docker (PR #66) — SQLite is no longer the dev database
+- `api/Dockerfile` — builds and runs (`migrate` then gunicorn); minimal on purpose, see Stage 2 below
+- `docker-compose.yml` — `db` + `api`, `api` waits on `db`'s healthcheck and finds it by service name (`db`), not `localhost`
 
 ## MVP Definition
 Deployed, and the user actually tracks their own budget in it daily.
@@ -79,51 +92,55 @@ Not "perfect" — "alive". Everything that does not block daily use is out of sc
 
 ## Road to MVP (strict order — do not reorder)
 
-### Stage 0 — Fix what is already broken (~half a day)
-- [ ] **0.1 StatsView ignores wallet and month** — `api/finance/views.py` uses `timezone.now()` and aggregates across all wallets. Must accept `wallet_id`, `month`, `year` query params (add `transaction__wallet_id` inside the existing `Sum(filter=Q(...))`).
-- [ ] **0.2 Stats.tsx never refetches** — `useEffect` has an empty dependency array; add `activeWallet, month, year` and pass them to `getStats()`. Guard with `if (!activeWallet) return`.
-- [ ] **0.3 No try/catch in data loading** — Dashboard `loadData` and Stats `load`. `setLoading(false)` must go in `finally`, otherwise a failed request leaves an infinite spinner.
-- [ ] **0.4 No `ordering` in model Meta** — add `ordering = ['-date', '-created_at']` to `Transaction` and `Income`. Without it pagination will duplicate and drop rows.
+### Stage 0 — Fix what is already broken (~half a day) — ✅ DONE
+- [x] **0.1 StatsView ignores wallet and month** — now accepts `wallet_id`, `month`, `year` query params.
+- [x] **0.2 Stats.tsx never refetches** — depends on `activeWallet, month, year`, guarded.
+- [x] **0.3 No try/catch in data loading** — `setLoading(false)` in `finally` on Dashboard and Stats.
+- [x] **0.4 No `ordering` in model Meta** — `ordering = ['-date', '-created_at']` on `Transaction` and `Income`.
 
-Done when: switching wallet on the Plan page changes the numbers; killing the backend shows an error instead of an endless spinner.
+Done when: switching wallet on the Plan page changes the numbers; killing the backend shows an error instead of an endless spinner. — confirmed.
 
-### Stage 1 — Production settings (~2 hours)
-- [ ] **1.1 `DEBUG` from env** — beware: env vars are strings, `bool("False")` is `True`.
-- [ ] **1.2 `ALLOWED_HOSTS` and `CORS_ALLOWED_ORIGINS` from env** — frontend origin is hardcoded to localhost.
-- [ ] **1.3 `SECRET_KEY` must fail loudly** when missing, not return `None`.
-- [ ] **1.4 `.env.example`** committed to git.
-- [ ] **1.5 `DATABASES` from `DATABASE_URL`** — keep SQLite as the local default.
+### Stage 1 — Production settings (~2 hours) — ✅ DONE (Vladimir, solo, PR #64)
+- [x] **1.1 `DEBUG` from env** — `os.getenv("DEBUG") == "True"`, sidesteps the `bool("False")` trap on purpose.
+- [x] **1.2 `ALLOWED_HOSTS` and `CORS_ALLOWED_ORIGINS` from env**.
+- [x] **1.3 `SECRET_KEY` fails loudly** when missing (`ImproperlyConfigured`).
+- [ ] **1.4 `.env.example`** — not committed; low priority, revisit before onboarding anyone else.
+- [x] **1.5 `DATABASES` from `DATABASE_URL`** via `dj-database-url`, SQLite default kept.
 
-### Stage 2 — Docker + Postgres (~1 day)
-- [ ] **2.1 `api/Dockerfile`** — python:3.13-slim, uv, gunicorn. No multi-stage, keep it simple.
-- [ ] **2.2 `docker-compose.yml`** — `db` (postgres:17) + `api`. db needs a `healthcheck` and api needs `depends_on: condition: service_healthy`.
-- [ ] **2.3 Move to Postgres locally** — Postgres is stricter than SQLite; find out on your own machine.
-- [ ] **2.4 Static files** — `collectstatic` + whitenoise, or the admin has no CSS in production.
+### Stage 2 — Docker + Postgres (~1 day) — mostly done, in progress
+- [x] **2.1 `api/Dockerfile`** — python:3.13-slim, uv, gunicorn. Deliberately minimal right now: no non-root user, no `.dockerignore` yet, no `exec` before gunicorn. That hardening is a separate, later pass — see Known Issues.
+- [x] **2.2 `docker-compose.yml`** — `db` (postgres:17) + `api`, `api` has `depends_on: condition: service_healthy` and finds the db by service name (`db:5432`), not `localhost`.
+- [x] **2.3 Move to Postgres locally** — running since PR #66; no SQLite-vs-Postgres friction found so far.
+- [ ] **2.4 Static files** — deliberately undecided. whitenoise was added, then removed at Vladimir's request; admin has no CSS with `DEBUG=False` until this is picked back up. Options: whitenoise (simplest), nginx (more machinery, more correct at scale), or ship without admin styling for now.
+- [ ] **`.dockerignore`** — doesn't exist yet. Without it `.env` and `.venv` are inside the build context (not necessarily copied into the image, but available to it) — do this before anything touches a real server.
 
-Done when: `docker compose up` on a clean machine brings up a working API.
+Done when: `docker compose up` on a clean machine brings up a working API. — verified working end to end (migrate runs, gunicorn serves, `db` resolves by name inside the compose network).
 
-### Stage 3 — Deploy (~1 day)
+### Stage 3 — Deploy (~1 day) — not started, blocked on Vladimir having a VPS + domain
 - [ ] **3.1 Frontend** — Cloudflare Pages, `VITE_API_URL` env var.
 - [ ] **3.2 Backend on VPS** — compose + Caddy (auto-SSL, saves hours vs nginx).
 - [ ] **3.3 Sentry** — both sides, BEFORE daily use starts.
-- [ ] **3.4 GitHub Actions** — one workflow to start: `ruff` + `npm run build` on PR. Manual deploy is fine at first.
+- [ ] **3.4 GitHub Actions** — one workflow to start: `ruff` + `npm run build` on PR (not `tsc --noEmit` — this repo's `tsconfig.json` is solution-style and `tsc --noEmit` type-checks zero files, so it would pass on a broken build). Manual deploy is fine at first.
 
-### Stage 4 — Minimal polish (~half a day)
-- [ ] **4.1 Pagination** — `PAGE_SIZE: 50`. Note: the frontend expects an array and will get `{count, next, results}`; `*.api.ts` needs updating.
-- [ ] **4.2 Isolation tests** — minimum two: user A cannot see user B's transactions; user A cannot create a transaction into user B's wallet.
-- [ ] **4.3 Refresh token** — Djoser endpoint exists, only the frontend interceptor is missing. Access token lives 24h, so today the user is logged out daily.
+3.1/3.3/3.4 need nothing from Vladimir and can start before a server exists; 3.2 cannot.
+
+### Stage 4 — Minimal polish (~half a day) — ✅ DONE
+- [x] **4.1 Pagination** — `PAGE_SIZE: 50`; frontend follows `next` rather than trusting `results` alone; wallets/categories opted out of pagination since they're bounded by nature.
+- [x] **4.2 Isolation tests** — four, in `IsolationTests`: a stranger can't read, edit, or spend from another user's wallet/category.
+- [x] **4.3 Refresh token** — access token now 1h (was 24h), refresh 30 days, frontend interceptor renews on 401 and retries the original request.
 
 ## Post-MVP (do not start before deploy)
-Reports page (recharts) · Funds system · OCR receipts via Claude Vision · Analytics insights · CSV import/export · PWA · Telegram bot · 2FA / password reset / Google OAuth · Shared budget · Service layer · Swagger docs (DEBUG only) · httpOnly cookie instead of localStorage token · PostHog
+Reports page (recharts) · Funds system · OCR receipts via Claude Vision · Analytics insights · CSV import/export · PWA · Telegram bot · 2FA / password reset / Google OAuth · Shared budget · Service layer · Swagger docs (DEBUG only) · httpOnly cookie instead of localStorage token · PostHog · Redis
+
+**Redis — learning exercise, not a fix for a real bottleneck.** Nothing in Cashew is slow enough to need caching, and there's no background job queue yet. Vladimir wants hands-on practice with it. Before writing code, pick an actual use with him — Celery broker for the funds auto-distribution job, caching the Report endpoint, or Telegram bot session state are the natural fits once those features exist — rather than bolting it on with no job for it to do.
 
 Charts are especially tempting — resist. Graphs over three weeks of data are useless; accumulate data first.
 
 ## Known Issues (not blocking MVP)
-- `Stats.spent` is typed `string | null` but the backend returns int `0` when there are no transactions
-- SummaryCards "Balance" is the net result of the selected month, not the wallet balance — consider renaming to "Net"
-- localStorage token is XSS-vulnerable
-- No delete confirmation dialog
-- No 404 page
+- localStorage token is XSS-vulnerable — planned fix is post-deploy: CSP first (biggest payoff, blocks exfiltration even if a script runs), then refresh-token rotation, then `npm ci`/`npm audit` in CI. httpOnly cookies are a bigger rewrite (CSRF, new auth flow) and stay post-MVP.
+- No 404 page — any unmatched route silently redirects to `/login` (`App.tsx`, the catch-all `*` route)
+
+Fixed since this list was last accurate: `Stats.spent` typing, "Balance" → "Net", delete confirmation (two-step now).
 
 ## Code Rules
 - Always explain the decision before writing the code, never after
