@@ -130,9 +130,11 @@ Done when: `docker compose up` on a clean machine brings up a working API. — v
 - [x] **4.3 Refresh token** — access token now 1h (was 24h), refresh 30 days, frontend interceptor renews on 401 and retries the original request.
 
 ## Post-MVP (do not start before deploy)
-Reports page (recharts) · Funds system · OCR receipts via Claude Vision · Analytics insights · CSV import/export · PWA · Telegram bot · 2FA / password reset / Google OAuth · Shared budget · Service layer · Swagger docs (DEBUG only) · httpOnly cookie instead of localStorage token · PostHog · Redis
+Reports page (recharts) · Funds system · OCR receipts via Claude Vision · Analytics insights · CSV import/export · PWA · Telegram bot · 2FA / password reset / Google OAuth · Shared budget · Service layer · Swagger docs (DEBUG only) · httpOnly cookie instead of localStorage token · PostHog · Redis · Celery (worker + scheduler)
 
 **Redis — learning exercise, not a fix for a real bottleneck.** Nothing in Cashew is slow enough to need caching, and there's no background job queue yet. Vladimir wants hands-on practice with it. Before writing code, pick an actual use with him — Celery broker for the funds auto-distribution job, caching the Report endpoint, or Telegram bot session state are the natural fits once those features exist — rather than bolting it on with no job for it to do.
+
+**Celery — same caveat, and it needs Redis first.** Two different container roles, not one: a **worker** (`celery -A config worker`) that runs background jobs off a queue — e.g. sending a Telegram notification without making the HTTP request wait for it — and a **scheduler** (`celery -A config beat`) that fires jobs on a timer — e.g. running the Funds auto-distribution on the 1st of the month. Neither has a job to do yet. The Funds system is what would finally give the scheduler a real task; don't add Celery before that feature exists, or it's a worker with nothing to work on.
 
 Charts are especially tempting — resist. Graphs over three weeks of data are useless; accumulate data first.
 
