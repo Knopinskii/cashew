@@ -85,6 +85,7 @@ Anything else previously listed here (PostHog, Anthropic SDK) is post-MVP — do
 - Postgres running locally in Docker (PR #66) — SQLite is no longer the dev database
 - `api/Dockerfile` — builds and runs (`migrate` then gunicorn); minimal on purpose, see Stage 2 below
 - `docker-compose.yml` — `db` + `api`, `api` waits on `db`'s healthcheck and finds it by service name (`db`), not `localhost`
+- Landing page at `/` (PR #69) — pitch, how-it-works, features, stack, roadmap; `PublicRoute` sends a logged-in visitor straight to `/dashboard` instead of showing the pitch. Catch-all `*` route now falls back to `/` instead of `/login`. Starter-template favicon swapped for an actual one (`app/public/favicon.svg`).
 
 ## MVP Definition
 Deployed, and the user actually tracks their own budget in it daily.
@@ -139,8 +140,15 @@ Reports page (recharts) · Funds system · OCR receipts via Claude Vision · Ana
 Charts are especially tempting — resist. Graphs over three weeks of data are useless; accumulate data first.
 
 ## Known Issues (not blocking MVP)
+- **No database backups.** Real transaction data lives in one Docker volume (`cashew_pgdata`) on one VPS with zero copies anywhere else — a disk failure, a provider outage, or one careless `docker volume rm` and months of tracked spending are gone for good. This is a bigger real-world risk than most of the security items below; fix before the others. A daily `pg_dump` via cron pushed to S3/Backblaze is enough at this scale, ~1 hour.
 - localStorage token is XSS-vulnerable — planned fix is post-deploy: CSP first (biggest payoff, blocks exfiltration even if a script runs), then refresh-token rotation, then `npm ci`/`npm audit` in CI. httpOnly cookies are a bigger rewrite (CSRF, new auth flow) and stay post-MVP.
-- No 404 page — any unmatched route silently redirects to `/login` (`App.tsx`, the catch-all `*` route)
+- No 404 page — any unmatched route silently falls back to `/` (`App.tsx`, the catch-all `*` route) instead of showing an error. Better than the old redirect-to-`/login` behavior, but a typo'd URL still gives no signal that the route doesn't exist.
+- Django admin exposes `Income` and `Transaction` with no owner filter (`finance/admin.py`) — a superuser sees every user's transactions in one flat list. Harmless with one user; fix before a second one exists — either unregister both models or scope the admin queryset to the logged-in user.
+- No production security headers — `manage.py check --deploy` has never been run against this settings file. Missing at minimum: `SECURE_HSTS_SECONDS`, `SECURE_CONTENT_TYPE_NOSNIFF`, `X_FRAME_OPTIONS`, `SESSION_COOKIE_SECURE`, `CSRF_COOKIE_SECURE`. ~15 minutes, do it once `DEBUG=False` is actually live.
+- No rate limiting on login — DRF has no throttle classes configured, so a brute-force pass at `/api/auth/jwt/create/` is unbounded. `django-ratelimit` or DRF's built-in `AnonRateThrottle` would cover it.
+- No uptime monitoring — `core/views.py` already has a `health/` endpoint, but nothing polls it. A free UptimeRobot check against `api.knopinskii.com/health/` would mean finding out about an outage before a user does, ~15 minutes.
+- No React error boundary — an uncaught render error blanks the whole page with no explanation. Different failure mode from the try/catch already covering API calls; this one is about a crash in rendering itself.
+- No meta description or Open Graph tags on the landing page (`app/index.html` has only `charset` and `viewport`) — a link to knopinskii.com shared in a chat shows no title, description, or preview image.
 
 Fixed since this list was last accurate: `Stats.spent` typing, "Balance" → "Net", delete confirmation (two-step now).
 
