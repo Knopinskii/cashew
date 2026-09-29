@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Register from "./pages/Register";
@@ -14,9 +15,20 @@ function ProtectedRoute({ element }: { element: React.ReactElement }) {
   );
 }
 
+// The inverse of ProtectedRoute: a logged-in visitor hitting "/" should land
+// on their data, not read a pitch for an app they already use every day.
+function PublicRoute({ element }: { element: React.ReactElement }) {
+  return localStorage.getItem("token") ? (
+    <Navigate to="/dashboard" replace />
+  ) : (
+    element
+  );
+}
+
 function AppRoutes() {
   return (
     <Routes>
+      <Route path="/" element={<PublicRoute element={<Landing />} />} />
       <Route path="/login" element={<Login />} />
       <Route
         path="/dashboard"
@@ -29,7 +41,7 @@ function AppRoutes() {
       />
       <Route path="/plan" element={<ProtectedRoute element={<Stats />} />} />
       <Route path="/report" element={<ProtectedRoute element={<Report />} />} />
-      <Route path="*" element={<Navigate to="/login" />} />
+      <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   );
 }
